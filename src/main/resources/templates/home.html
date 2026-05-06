@@ -3,39 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste HTML</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+    <title>EcoRadar</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <div class="position-absolute top-0 start-50 translate-middle-x mt-3 z-3 d-flex justify-content-center w-100">
+        <div style="max-width:600px;" class="input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar">
+            <button class="btn btn-primary" type="button" id="searchBtn">Buscar</button>
+        </div>
+    </div>
+    <div class="w-100 h-100 z-0" id="map">
 
-<h1>Olá, mundo! 🌍</h1>
-<p>Esse é um teste simples de HTML.</p>
-
-<button onclick="mostrarMensagem()">Clique aqui</button>
-
-<script>
-    function mostrarMensagem() {
-        alert("Funcionou!");
-    }
-</script>
-
+    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/map.js"></script>
 </body>
 </html>
