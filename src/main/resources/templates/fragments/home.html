@@ -1,64 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" sizes="32x32" href="./images/EcoRadarLogoSemNome.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
     <title>EcoRadar</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+<div th:replace="fragments/navbar :: navbar"></div>
 <div class="container-fluid vh-100 px-0">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-            <ul class="navbar-nav d-flex align-items-center me-0 mb-2 mb-lg-0">
-                <img src="./images/EcoRadarLogoSemNome.png" alt="EcoRadar" width="200" height="100" class="me-2">
-                <a class="navbar-brand ps-0"  href="#">EcoRadar</a>
-            </ul>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link fs-5" href="#">Favoritos</a>
-                    </li>
-                    <li>
-                        <a class="nav-link fs-5" href="#">Mapa</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fs-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Eventos
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Meus Eventos</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="navbar mb-2 mb-lg-0 me-5">
-            <ul class="list-unstyled navbar-nav me-auto mb-1 mb-lg-0">
-                <li class="nav-item">
-                    <a class="btn btn-outline-success d-flex align-items-center perfil-btn" href="#">
-                        <i class="bi bi-person-circle me-3 perfil-icon"></i>
-                        Fazer Login
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
     <div class="container-fluid py-3">
         <div class="row justify-content-center">
             <div class="bg-white shadow rounded p-4 box">
-                <img src="./images/EcoRadarlogo.png" class="d-block mx-auto" alt="EcoRadar" width="500" height="auto">
+                <img src="/images/EcoRadarLogoSemNome.png" class="d-block mx-auto" alt="EcoRadar" width="500" height="auto">
                 <div class="text-center">
                     <h1 class="display-7 fw-bold mb-3">Conecte-se com o verde ao seu redor!</h1>
                     <h2 class="lead fs-4 text-secondary mb-5">
@@ -103,9 +62,8 @@
         </div>
     </div>
 </div>
-
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/map.js"></script>
+<script src="/js/map.js"></script>
 </body>
 </html>

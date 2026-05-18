@@ -1,16 +1,20 @@
 let map;
 let marcacaoAtual;
+let debounceTimer;
 
 navigator.geolocation.getCurrentPosition((position) => {
     let { latitude, longitude } = position.coords;
 
+    // Inicializa o mapa na posição atual
     map = L.map('map').setView([latitude, longitude], 17);
 
+    // TileLayer do OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap'
+        attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Marcador da localização atual
     L.marker([latitude, longitude]).addTo(map)
         .bindPopup("Minha localização")
         .openPopup();
@@ -19,21 +23,14 @@ navigator.geolocation.getCurrentPosition((position) => {
 const searchInput = document.getElementById('searchInput');
 const listaPesquisas = document.getElementById('listaPesquisas');
 
-// Autocomplete enquanto digita
-searchInput.addEventListener('input', async () => {
-    const query = searchInput.value.trim();
-    if (!query) {
-        listaPesquisas.innerHTML = '';
-        return;
-    }
-
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+// Função para buscar sugestões via backend
+async function buscarSugestoes(query) {
+    const url = "homehttp://localhost:8080/api/search?q=" + query;// chama o backend
     try {
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'EcoRadarApp/1.0 (contato@seudominio.com)'
-            }
-        });
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
         const results = await response.json();
         console.log(results);
 
@@ -47,10 +44,10 @@ searchInput.addEventListener('input', async () => {
                 if (marcacaoAtual) {
                     map.removeLayer(marcacaoAtual);
                 }
-                marcacaoAtual = L.marker([r.lat, r.lon]).addTo(map)
+                marcacaoAtual = L.marker([parseFloat(r.lat), parseFloat(r.lon)]).addTo(map)
                     .bindPopup(r.display_name)
                     .openPopup();
-                map.setView([r.lat, r.lon], 14);
+                map.setView([parseFloat(r.lat), parseFloat(r.lon)], 14);
 
                 listaPesquisas.innerHTML = '';
                 searchInput.value = r.display_name;
@@ -61,6 +58,17 @@ searchInput.addEventListener('input', async () => {
     } catch (error) {
         console.error('Erro ao buscar sugestões:', error);
     }
+}
+
+// Autocomplete com debounce
+searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    if (!query) {
+        listaPesquisas.innerHTML = '';
+        return;
+    }
+    debounceTimer = setTimeout(() => buscarSugestoes(query), 400);
 });
 
 // Função de busca ao clicar no botão
@@ -68,9 +76,12 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = searchInput.value.trim();
     if (!query || !map) return;
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    const url = `/api/search?q=${encodeURIComponent(query)}`; // chama o backend
     try {
         const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
         const results = await response.json();
 
         if (results.length > 0) {
@@ -80,11 +91,11 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
                 map.removeLayer(marcacaoAtual);
             }
 
-            marcacaoAtual = L.marker([lat, lon]).addTo(map)
+            marcacaoAtual = L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map)
                 .bindPopup(display_name)
                 .openPopup();
 
-            map.setView([lat, lon], 14);
+            map.setView([parseFloat(lat), parseFloat(lon)], 14);
         } else {
             alert('Nenhum local encontrado');
         }
@@ -93,13 +104,14 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     }
 });
 
+// Enter para confirmar pesquisa
 searchInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         const primeiroItem = listaPesquisas.querySelector('li');
         if (primeiroItem) {
-            primeiroItem.click(); // simula clique na primeira sugestão
+            primeiroItem.click();
         } else {
-            document.getElementById('searchBtn').click(); // fallback
+            document.getElementById('searchBtn').click();
         }
     }
 });
