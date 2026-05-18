@@ -3,15 +3,13 @@ package com.example.EcoRadar.controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 
-@RestController
+@Controller
 @RequestMapping("/login")
 public class LoginController {
-
     @GetMapping
     public String index(Model model) {
-        return "login/login";
+        return "login/login"; // subpasta login
     }
 }
-

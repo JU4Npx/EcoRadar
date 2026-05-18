@@ -2,9 +2,78 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title>EcoRadar</title>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 mt-5 mb-5">
+            <div class="card-header text-center bg-success text-white">
+                <h3>Cadastro / Login</h3>
+            </div>
+            <div class="card-body p-4">
+                <form th:action="@{/authenticate}" method="post">
+                    <div class="form-group mb-3">
+                        <label for="nomeCompleto">Nome completo</label>
+                        <input type="text" class="form-control rounded-pill" id="nomeCompleto" name="nomeCompleto" placeholder="Digite seu nome completo" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="email">E-mail</label>
+                        <input type="email" class="form-control rounded-pill" id="email" name="email" placeholder="exemplo@dominio.com" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="senha">Senha</label>
+                        <input type="password" class="form-control rounded-pill" id="senha" name="senha" placeholder="Digite sua senha" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="senhaConfirmacao">Digite sua senha novamente</label>
+                        <input type="password" class="form-control rounded-pill" id="senhaConfirmacao" name="senhaConfirmacao" placeholder="Confirme sua senha" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="cep">CEP</label>
+                        <input type="text" class="form-control rounded-pill" id="cep" name="cep" placeholder="00000-000" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="estado">Estado</label>
+                        <input type="text" class="form-control rounded-pill" id="estado" name="estado" placeholder="Digite seu estado" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" class="form-control rounded-pill" id="cidade" name="cidade" placeholder="Digite sua cidade" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="bairro">Bairro</label>
+                        <input type="text" class="form-control rounded-pill" id="bairro" name="bairro" placeholder="Digite seu bairro" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="rua">Rua</label>
+                        <input type="text" class="form-control rounded-pill" id="rua" name="rua" placeholder="Digite sua rua" required>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg rounded-pill px-5">
+                            <i class="bi bi-box-arrow-in-right"></i> Cadastrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
