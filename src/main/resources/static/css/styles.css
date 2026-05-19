@@ -46,3 +46,7 @@ body{background-color: #A5D6A7
     font-size: 1.6rem;
 }
 
+.map-page {
+    height: 600px;
+    width: 100%;
+}

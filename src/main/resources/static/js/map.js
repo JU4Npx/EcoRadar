@@ -2,10 +2,10 @@ let map;
 let marcacaoAtual;
 let debounceTimer;
 
+// Inicializa o mapa na posição atual do usuário
 navigator.geolocation.getCurrentPosition((position) => {
     let { latitude, longitude } = position.coords;
 
-    // Inicializa o mapa na posição atual
     map = L.map('map').setView([latitude, longitude], 17);
 
     // TileLayer do OpenStreetMap
@@ -23,9 +23,9 @@ navigator.geolocation.getCurrentPosition((position) => {
 const searchInput = document.getElementById('searchInput');
 const listaPesquisas = document.getElementById('listaPesquisas');
 
-// Função para buscar sugestões via backend
+// Função para buscar sugestões via Nominatim
 async function buscarSugestoes(query) {
-    const url = "homehttp://localhost:8080/api/search?q=" + query;// chama o backend
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -76,7 +76,7 @@ document.getElementById('searchBtn').addEventListener('click', async () => {
     const query = searchInput.value.trim();
     if (!query || !map) return;
 
-    const url = `/api/search?q=${encodeURIComponent(query)}`; // chama o backend
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
