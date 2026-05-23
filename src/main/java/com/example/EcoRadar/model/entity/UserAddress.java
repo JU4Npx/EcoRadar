@@ -9,7 +9,7 @@ public class UserAddress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_address_id")
-    private Long id;
+    private Integer id;
 
     private String cep;
 
@@ -28,7 +28,7 @@ public class UserAddress {
     public UserAddress() {
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 

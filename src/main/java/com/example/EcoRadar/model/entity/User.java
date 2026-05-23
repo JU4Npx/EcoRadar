@@ -12,7 +12,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -33,10 +33,15 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserAddress address;
 
-    public User() {
+    public User(String email, String password, UserType type, LocalDateTime createdAt, LocalDateTime updatedAt, UserAddress address) {
+        this.email = email;
+        this.password = password;
+        this.type = type;
+        this.createdAt = createdAt;
+        this.address = address;
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
