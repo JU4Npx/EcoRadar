@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title>EcoRadar</title>
+    <link href="https://googleapis.com" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+<div class="container-fluid vh-100 px-0">
+    <div class="container-fluid py-3">
+        <div class="row justify-content-center">
+            <div class="bg-white shadow rounded p-4 box">
+                <img src="/images/EcoRadarLogoSemNome.png" class="d-block mx-auto" alt="EcoRadar" width="500" height="auto">
+                <div class="text-center">
+                    <h1 class="display-7 fw-bold mb-3">Conecte-se com o verde ao seu redor!</h1>
+                    <h2 class="lead fs-4 text-secondary mb-5">
+                        O <strong>EcoRadar</strong> é a sua bússola para descobrir a natureza na cidade. Explore parques ecologicos, praças, e áreas de preservação a poucos passos de você e transforme sua relação com o meio ambiente local.
+                    </h2>
+                    <p class="fs-5">
+                        Fique por dentro de shows em praças, feiras ecológicas e atividades ao ar livre.
+                    </p>
+                    <p class="fs-5">
+                        Favorite os espaços que você mais ama para acompanhar a programação exclusiva de cada um.
+                    </p>
+                    <p class="fs-5">
+                        Receba notificações e seja o primeiro a saber quando um novo evento for confirmado em suas áreas favoritadas.
+                    </p>
+                    <p>
+                        Conecte-se com o verde ao seu redor!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row h-50">
+        <div class="col-md-2 bg-light border-end p-3">
+            <h5>Local</h5>
+            <div id="eventList">
+                <p>Nenhum local selecionado.</p>
+            </div>
+        </div>
+        <div class="col-md-8 p-0 position-relative">
+            <div class="position-absolute top-0 start-50 translate-middle-x mt-5 z-3 d-flex justify-content-center w-50">
+                <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar">
+                <button class="btn btn-primary" type="button" id="searchBtn">Buscar</button>
+                <ul id="listaPesquisas" class="list-group position-absolute w-100"></ul>
+            </div>
+            <div class="w-100 h-100 mt-0 z-0" id="map"></div>
+        </div>
+        <div class="col-md-2 bg-light border-start p-3">
+            <h5>Eventos</h5>
+            <div id="eventDetails">
+                <p>Selecione um evento para ver detalhes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/map.js"></script>
+</body>
+</html>
