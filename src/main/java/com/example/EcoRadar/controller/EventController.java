@@ -16,7 +16,7 @@ public class EventController {
     private EventService service;
 
     @GetMapping
-    public String listar(Model model) {
+    public String list(Model model) {
 
         model.addAttribute(
                 "eventos",
@@ -27,18 +27,18 @@ public class EventController {
     }
 
     @GetMapping("/novo")
-    public String novo(Model model) {
+    public String new(Model model) {
 
         model.addAttribute(
                 "evento",
                 new Event()
         );
 
-        return "event/cadastro";
+        return "registerEvent/registerEvent";
     }
 
-    @PostMapping("/salvar")
-    public String salvar(@ModelAttribute Event event) {
+    @PostMapping("/salver")
+    public String save(@ModelAttribute Event event) {
 
         service.save(event);
 
