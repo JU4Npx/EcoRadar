@@ -25,7 +25,7 @@ public class UserService {
         return repository.findAll();
     }
 
-    public Optional<User> searchForId(Integer id) {
+    public Optional<User> findById(Integer id) {
 
         return repository.findById(id);
     }

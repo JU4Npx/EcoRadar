@@ -27,7 +27,7 @@ public class EventService {
         return repository.findAll();
     }
 
-    public Optional<Event> searchForId(Integer id) {
+    public Optional<Event> findById(Integer id) {
 
         return repository.findById(id);
     }

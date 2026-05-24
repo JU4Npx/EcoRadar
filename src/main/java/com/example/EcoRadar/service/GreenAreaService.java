@@ -26,7 +26,7 @@ public class GreenAreaService {
         return repository.findAll();
     }
 
-    public Optional<GreenArea> searchForId(Integer id) {
+    public Optional<GreenArea> findById(Integer id) {
 
         return repository.findById(id);
     }
