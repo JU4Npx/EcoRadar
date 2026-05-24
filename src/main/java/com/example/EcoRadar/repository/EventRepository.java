@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventRepository
-        extends JpaRepository<Event, Long> {
+        extends JpaRepository<Event, Integer> {
 
     List<Event>
     findByGreenArea(GreenArea greenArea);
