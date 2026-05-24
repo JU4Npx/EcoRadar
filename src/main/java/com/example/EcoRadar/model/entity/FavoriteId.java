@@ -5,9 +5,9 @@ import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 
 @Embeddable
-class FavoriteId implements Serializable {
+public class FavoriteId implements Serializable {
 
-    private Long idUser;
+    private Integer idUser;
 
-    private Long idGreenArea;
+    private Integer idGreenArea;
 }
