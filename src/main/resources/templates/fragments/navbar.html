@@ -1,5 +1,4 @@
-<!-- templates/fragments/navbar.html -->
-<nav class="navbar navbar-expand-lg bg-body-tertiary" th:fragment="navbar">
+<nav xmlns:th="http://www.thymeleaf.org" class="navbar navbar-expand-lg bg-body-tertiary" th:fragment="navbar">
     <div class="container-fluid">
         <ul class="navbar-nav d-flex align-items-center me-0 mb-2 mb-lg-0">
             <img src="/images/EcoRadarLogoSemNome.png" alt="EcoRadar" width="200" height="100" class="me-2">
@@ -30,12 +29,21 @@
     </div>
     <div class="navbar mb-2 mb-lg-0 me-5">
         <ul class="list-unstyled navbar-nav me-auto mb-1 mb-lg-0">
-            <li class="nav-item">
-                <a class="btn btn-outline-success d-flex align-items-center perfil-btn" href="/login">
+
+            <li class="nav-item" th:if="${session.usuarioLogado == null}">
+                <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/login}">
                     <i class="bi bi-person-circle me-3 perfil-icon"></i>
                     Fazer Login
                 </a>
             </li>
+
+            <li class="nav-item" th:if="${session.usuarioLogado != null}">
+                <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/perfil}">
+                    <i class="bi bi-person-circle me-3 perfil-icon"></i>
+                    Meu Perfil
+                </a>
+            </li>
+
         </ul>
     </div>
 </nav>

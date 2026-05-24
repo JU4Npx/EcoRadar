@@ -46,6 +46,79 @@ body{background-color: #A5D6A7
     font-size: 1.6rem;
 }
 
+.login-card {
+    width: 380px;
+}
+
+.auth-page {
+    min-height: 100vh;
+    padding: 8px 24px 56px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.auth-card {
+    width: min(950px, 100%);
+    background-color: #ffffff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.auth-card-header {
+    background-color: #198754;
+    color: #ffffff;
+    padding: 8px 24px 10px;
+    text-align: center;
+}
+
+.auth-card-header h3 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 700;
+}
+
+.auth-form {
+    padding: 20px 20px 18px;
+}
+
+.auth-field {
+    margin-bottom: 10px;
+}
+
+.auth-field label {
+    margin-bottom: 3px;
+    font-size: 0.86rem;
+    color: #0f172a;
+}
+
+.auth-field .form-control {
+    min-height: 31px;
+    padding: 4px 12px;
+    border-radius: 18px;
+    font-size: 0.86rem;
+}
+
+.auth-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.auth-submit {
+    min-width: 175px;
+    border-radius: 18px;
+    font-weight: 600;
+}
+
+.profile-panel {
+    max-width: 520px;
+}
+
+.profile-avatar {
+    font-size: 3rem;
+}
+
 .map-page {
     height: 600px;
     width: 100%;

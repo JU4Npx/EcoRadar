@@ -18,4 +18,5 @@ public class SearchController {
         Object result = restTemplate.getForObject(url, Object.class);
         return ResponseEntity.ok(result);
     }
+
 }
