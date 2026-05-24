@@ -14,7 +14,7 @@ public class GreenArea {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "green_area_id")
-    private Long id;
+    private Integer id;
 
     @Column(name = "green_area_name")
     private String name;
