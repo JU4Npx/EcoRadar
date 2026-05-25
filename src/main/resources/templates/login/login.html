@@ -1,46 +1,150 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>EcoRadar - Login</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/styles.css">
+
+    <link rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/images/EcoRadarLogoSemNome.png">
+
+    <!-- BOOTSTRAP -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <!-- CSS GLOBAL -->
+    <link rel="stylesheet"
+          href="/css/styles.css">
+
 </head>
+
 <body>
+
 <div class="container vh-100 d-flex justify-content-center align-items-center">
-    <div class="card p-4 shadow login-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="card-title mb-0">Fazer Login</h4>
-            <img src="/images/EcoRadarLogoSemNome.png" alt="EcoRadar" width="120" height="auto">
+
+    <div class="card shadow p-4 login-card"
+         style="width: 420px; border-radius: 20px;">
+
+        <!-- TOPO -->
+        <div class="text-center mb-4">
+
+            <img src="/images/EcoRadarLogoSemNome.png"
+                 alt="EcoRadar"
+                 width="100"
+                 class="mb-3">
+
+            <h2 class="fw-bold">
+                EcoRadar
+            </h2>
+
+            <p class="text-muted">
+                Faça login para continuar
+            </p>
+
         </div>
 
-        <div th:if="${param.error}" class="alert alert-danger p-2 small mb-3">Usu&aacute;rio ou senha inv&aacute;lidos.</div>
-        <div th:if="${param.logout}" class="alert alert-success p-2 small mb-3">Voc&ecirc; saiu com sucesso.</div>
-        <div th:if="${message}" class="alert alert-success p-2 small mb-3" th:text="${message}"></div>
+        <!-- ERROS -->
+        <div th:if="${error}"
+             class="alert alert-danger">
 
-        <form th:action="@{/login}" method="post">
+            <span th:text="${error}"></span>
+
+        </div>
+
+        <div th:if="${param.logout}"
+             class="alert alert-success">
+
+            Logout realizado com sucesso.
+
+        </div>
+
+        <!-- FORM -->
+        <form th:action="@{/login}"
+              method="post">
+
+            <!-- EMAIL -->
             <div class="mb-3">
-                <label for="username" class="form-label">Usu&aacute;rio</label>
-                <input type="text" name="username" id="username" class="form-control" required autofocus>
+
+                <label for="email"
+                       class="form-label">
+
+                    Email
+                </label>
+
+                <input type="email"
+                       id="email"
+                       name="email"
+                       class="form-control"
+                       placeholder="Digite seu email"
+                       required>
+
             </div>
 
-            <div class="mb-3">
-                <label for="password" class="form-label">Senha</label>
-                <input type="password" name="password" id="password" class="form-control" required>
+            <!-- SENHA -->
+            <div class="mb-4">
+
+                <label for="password"
+                       class="form-label">
+
+                    Senha
+                </label>
+
+                <input type="password"
+                       id="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="Digite sua senha"
+                       required>
+
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <button type="submit" class="btn btn-success">Entrar</button>
-                <a th:href="@{/home}" class="btn btn-link text-secondary text-decoration-none">Cancelar</a>
+            <!-- BOTÕES -->
+            <div class="d-grid mb-3">
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    Entrar
+                </button>
+
             </div>
+
+            <div class="text-center">
+
+                <a th:href="@{/home}"
+                   class="text-decoration-none text-secondary">
+
+                    Cancelar
+
+                </a>
+
+            </div>
+
         </form>
 
-        <div class="mt-3 text-center">
-            <p>N&atilde;o tem cadastro? <a th:href="@{/register}" class="btn btn-link">Cadastre-se</a></p>
+        <!-- CADASTRO -->
+        <div class="text-center mt-4">
+
+            <span class="text-muted">
+                Não possui conta?
+            </span>
+
+            <a th:href="@{/register}">
+                Cadastre-se
+            </a>
+
         </div>
+
     </div>
+
 </div>
+
 </body>
 </html>

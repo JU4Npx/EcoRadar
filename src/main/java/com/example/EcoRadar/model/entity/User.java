@@ -34,6 +34,9 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserAddress address;
 
+    public User() {
+    }
+
     public User(String email, String password, UserType type, LocalDateTime createdAt, LocalDateTime updatedAt, UserAddress address) {
         this.email = email;
         this.password = password;

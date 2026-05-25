@@ -2,115 +2,252 @@ let map;
 let marcacaoAtual;
 let debounceTimer;
 
-// Inicializa o mapa na posição atual do usuário
-navigator.geolocation.getCurrentPosition((position) => {
-    let { latitude, longitude } = position.coords;
-
-    map = L.map('map').setView([latitude, longitude], 17);
-
-    // TileLayer do OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Marcador da localização atual
-    L.marker([latitude, longitude]).addTo(map)
-        .bindPopup("Minha localização")
-        .openPopup();
-});
-
 const searchInput = document.getElementById('searchInput');
 const listaPesquisas = document.getElementById('listaPesquisas');
 
-// Função para buscar sugestões via Nominatim
+/*
+|--------------------------------------------------------------------------
+| INICIALIZAÇÃO DO MAPA
+|--------------------------------------------------------------------------
+*/
+
+navigator.geolocation.getCurrentPosition(
+
+    // SUCESSO
+    (position) => {
+
+        const { latitude, longitude, accuracy } = position.coords;
+
+        // Cria mapa
+        map = L.map('map').setView([latitude, longitude], 18);
+
+        // Camada OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Marcador da localização atual
+        L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup("Minha localização")
+            .openPopup();
+
+        // Círculo de precisão
+        L.circle([latitude, longitude], {
+            radius: accuracy
+        }).addTo(map);
+
+        console.log("Latitude:", latitude);
+        console.log("Longitude:", longitude);
+        console.log("Precisão:", accuracy);
+
+    },
+
+    // ERRO
+    (error) => {
+
+        console.error("Erro ao obter localização:", error);
+
+        alert("Não foi possível obter sua localização.");
+
+        // Local padrão (Maceió)
+        map = L.map('map').setView([-9.6658, -35.7353], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    },
+
+    // CONFIGURAÇÕES GPS
+    {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    }
+);
+
+/*
+|--------------------------------------------------------------------------
+| FUNÇÃO DE BUSCA DE SUGESTÕES
+|--------------------------------------------------------------------------
+*/
+
 async function buscarSugestoes(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+    const url =
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
     try {
+
         const response = await fetch(url);
+
         if (!response.ok) {
             throw new Error(`Erro HTTP: ${response.status}`);
         }
+
         const results = await response.json();
-        console.log(results);
 
         listaPesquisas.innerHTML = '';
+
         results.forEach(r => {
+
             const item = document.createElement('li');
+
             item.textContent = r.display_name;
-            item.classList.add('list-group-item', 'list-group-item-action');
+
+            item.classList.add(
+                'list-group-item',
+                'list-group-item-action'
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLICK NA SUGESTÃO
+            |--------------------------------------------------------------------------
+            */
 
             item.addEventListener('click', () => {
+
+                const lat = parseFloat(r.lat);
+                const lon = parseFloat(r.lon);
+
+                // Remove marcador anterior
                 if (marcacaoAtual) {
                     map.removeLayer(marcacaoAtual);
                 }
-                marcacaoAtual = L.marker([parseFloat(r.lat), parseFloat(r.lon)]).addTo(map)
+
+                // Cria novo marcador
+                marcacaoAtual = L.marker([lat, lon])
+                    .addTo(map)
                     .bindPopup(r.display_name)
                     .openPopup();
-                map.setView([parseFloat(r.lat), parseFloat(r.lon)], 14);
 
+                // Move mapa
+                map.setView([lat, lon], 16);
+
+                // Limpa lista
                 listaPesquisas.innerHTML = '';
+
+                // Atualiza input
                 searchInput.value = r.display_name;
             });
 
             listaPesquisas.appendChild(item);
         });
+
     } catch (error) {
+
         console.error('Erro ao buscar sugestões:', error);
     }
 }
 
-// Autocomplete com debounce
+/*
+|--------------------------------------------------------------------------
+| AUTOCOMPLETE COM DEBOUNCE
+|--------------------------------------------------------------------------
+*/
+
 searchInput.addEventListener('input', () => {
+
     clearTimeout(debounceTimer);
+
     const query = searchInput.value.trim();
+
     if (!query) {
+
         listaPesquisas.innerHTML = '';
+
         return;
     }
-    debounceTimer = setTimeout(() => buscarSugestoes(query), 400);
+
+    debounceTimer = setTimeout(() => {
+
+        buscarSugestoes(query);
+
+    }, 400);
 });
 
-// Função de busca ao clicar no botão
-document.getElementById('searchBtn').addEventListener('click', async () => {
-    const query = searchInput.value.trim();
-    if (!query || !map) return;
+/*
+|--------------------------------------------------------------------------
+| BOTÃO DE PESQUISA
+|--------------------------------------------------------------------------
+*/
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        const results = await response.json();
+document.getElementById('searchBtn')
+    .addEventListener('click', async () => {
 
-        if (results.length > 0) {
-            const { lat, lon, display_name } = results[0];
+        const query = searchInput.value.trim();
 
-            if (marcacaoAtual) {
-                map.removeLayer(marcacaoAtual);
+        if (!query || !map) return;
+
+        const url =
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+        try {
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
             }
 
-            marcacaoAtual = L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map)
-                .bindPopup(display_name)
-                .openPopup();
+            const results = await response.json();
 
-            map.setView([parseFloat(lat), parseFloat(lon)], 14);
-        } else {
-            alert('Nenhum local encontrado');
+            if (results.length > 0) {
+
+                const { lat, lon, display_name } = results[0];
+
+                // Remove marcador antigo
+                if (marcacaoAtual) {
+                    map.removeLayer(marcacaoAtual);
+                }
+
+                // Novo marcador
+                marcacaoAtual = L.marker([
+                    parseFloat(lat),
+                    parseFloat(lon)
+                ])
+                    .addTo(map)
+                    .bindPopup(display_name)
+                    .openPopup();
+
+                // Centraliza mapa
+                map.setView([
+                    parseFloat(lat),
+                    parseFloat(lon)
+                ], 16);
+
+            } else {
+
+                alert('Nenhum local encontrado');
+            }
+
+        } catch (error) {
+
+            console.error('Erro na busca:', error);
         }
-    } catch (error) {
-        console.error('Erro na busca:', error);
-    }
-});
+    });
 
-// Enter para confirmar pesquisa
+/*
+|--------------------------------------------------------------------------
+| ENTER PARA PESQUISAR
+|--------------------------------------------------------------------------
+*/
+
 searchInput.addEventListener('keydown', function (e) {
+
     if (e.key === 'Enter') {
+
         const primeiroItem = listaPesquisas.querySelector('li');
+
         if (primeiroItem) {
+
             primeiroItem.click();
+
         } else {
+
             document.getElementById('searchBtn').click();
         }
     }

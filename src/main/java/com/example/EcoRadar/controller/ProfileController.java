@@ -1,5 +1,6 @@
 package com.example.EcoRadar.controller;
 
+import com.example.EcoRadar.model.entity.User;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,20 +10,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class ProfileController {
 
     @GetMapping("/perfil")
-    public String profile(HttpSession session, Model model) {
-        Object usuarioLogado = session.getAttribute("usuarioLogado");
+    public String profile(HttpSession session,
+                          Model model) {
 
-        if (usuarioLogado == null) {
+        User loggedUser =
+                (User) session.getAttribute("loggedUser");
+
+        if (loggedUser == null) {
             return "redirect:/login";
         }
 
-        model.addAttribute("usuarioLogado", usuarioLogado);
+        model.addAttribute(
+                "loggedUser",
+                loggedUser
+        );
+
         return "profile/profile";
     }
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
+
         session.invalidate();
+
         return "redirect:/login?logout";
     }
 }

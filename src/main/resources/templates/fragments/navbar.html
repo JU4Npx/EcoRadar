@@ -13,15 +13,41 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link fs-5" href="/favorites">Favoritos</a></li>
                 <li><a class="nav-link fs-5" href="/map">Mapa</a></li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle fs-5" href="#" role="button" data-bs-toggle="dropdown">
+                <li class="nav-item dropdown"
+                    th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+                    <a class="nav-link dropdown-toggle"
+                       href="#"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false">
                         Eventos
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" th:href="@{/registerEvent}">Criar Evento</a></li>
-                        <li><a class="dropdown-item" href="#">Editar Evento</a></li>
-                        <li><a class="dropdown-item" href="#">Remover Evento</a></li>
+                        <li>
+                            <a class="dropdown-item"
+                               th:href="@{/registerEvent}">
+                                Criar Evento
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                Editar Evento
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                Remover Evento
+                            </a>
+                        </li>
                     </ul>
+                </li>
+                <li th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+
+                    <a class="dropdown-item"
+                       th:href="@{/users}">
+
+                        Gerenciar Usuários
+                    </a>
                 </li>
             </ul>
         </div>
@@ -29,14 +55,14 @@
     <div class="navbar mb-2 mb-lg-0 me-5">
         <ul class="list-unstyled navbar-nav me-auto mb-1 mb-lg-0">
 
-            <li class="nav-item" th:if="${session.usuarioLogado == null}">
+            <li class="nav-item" th:if="${session.loggedUser == null}">
                 <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/login}">
                     <i class="bi bi-person-circle me-3 perfil-icon"></i>
                     Fazer Login
                 </a>
             </li>
 
-            <li class="nav-item" th:if="${session.usuarioLogado != null}">
+            <li class="nav-item" th:if="${session.loggedUser != null}">
                 <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/perfil}">
                     <i class="bi bi-person-circle me-3 perfil-icon"></i>
                     Meu Perfil
