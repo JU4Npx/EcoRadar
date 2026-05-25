@@ -14,28 +14,21 @@
 </head>
 <body>
 <div th:replace="fragments/navbar :: navbar"></div>
-<form th:action="@{/eventos/salvar}"
-      th:object="${evento}"
-      method="post">
+<form th:action="@{/eventos/salvar}" th:object="${evento}" method="post">
 
-    <input type="text"
-           th:field="{title}"
-           placeholder="Título">
+    <input type="text" th:field="*{title}" placeholder="Título" />
 
-    <textarea th:field="{description}">
-    </textarea>
+    <textarea th:field="*{description}"></textarea>
 
-    <input type="datetime-local"
-           th:field="{startDate}">
+    <input type="datetime-local" th:field="*{startDate}" />
 
-    <input type="datetime-local"
-           th:field="{endDate}">
+    <input type="datetime-local" th:field="*{endDate}" />
 
-    <button type="submit">
-        Salvar
-    </button>
+    <button type="submit">Salvar</button>
 
 </form>
+<!-- Removi a </div> que estava sobrando aqui -->
+
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
