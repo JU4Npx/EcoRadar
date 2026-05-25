@@ -2,7 +2,8 @@ package com.example.EcoRadar.model.entity;
 
 import com.example.EcoRadar.model.enums.UserType;
 import jakarta.persistence.*;
-
+import jakarta.persistence.Column;
+import com.example.EcoRadar.model.entity.UserAddress;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,6 +39,7 @@ public class User {
         this.password = password;
         this.type = type;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.address = address;
     }
 

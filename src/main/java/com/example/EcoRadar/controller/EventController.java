@@ -27,7 +27,7 @@ public class EventController {
     }
 
     @GetMapping("/novo")
-    public String new(Model model) {
+    public String newEvent(Model model) {
 
         model.addAttribute(
                 "evento",
