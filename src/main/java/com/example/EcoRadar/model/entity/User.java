@@ -2,8 +2,7 @@ package com.example.EcoRadar.model.entity;
 
 import com.example.EcoRadar.model.enums.UserType;
 import jakarta.persistence.*;
-import jakarta.persistence.Column;
-import com.example.EcoRadar.model.entity.UserAddress;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,7 +14,8 @@ public class User {
     @Column(name = "user_id")
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false,
+            unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -31,23 +31,46 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private UserAddress address;
+    /*
+    |--------------------------------------------------------------------------
+    | CONSTRUTOR VAZIO
+    |--------------------------------------------------------------------------
+    */
 
     public User() {
     }
 
-    public User(String email, String password, UserType type, LocalDateTime createdAt, LocalDateTime updatedAt, UserAddress address) {
+    /*
+    |--------------------------------------------------------------------------
+    | CONSTRUTOR
+    |--------------------------------------------------------------------------
+    */
+
+    public User(String email,
+                String password,
+                UserType type,
+                LocalDateTime createdAt,
+                LocalDateTime updatedAt) {
+
         this.email = email;
         this.password = password;
         this.type = type;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.address = address;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GETTERS E SETTERS
+    |--------------------------------------------------------------------------
+    */
 
     public Integer getId() {
         return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -88,13 +111,5 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public UserAddress getAddress() {
-        return address;
-    }
-
-    public void setAddress(UserAddress address) {
-        this.address = address;
     }
 }

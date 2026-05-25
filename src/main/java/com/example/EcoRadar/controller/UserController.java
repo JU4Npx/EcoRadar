@@ -9,64 +9,67 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
-@RequestMapping("/users")
 public class UserController {
 
     @Autowired
-    private UserService service;
+    private UserService userService;
 
-    /*
-    |--------------------------------------------------------------------------
-    | LISTAR USUÁRIOS
-    |--------------------------------------------------------------------------
-    */
 
-    @GetMapping
-    public String listUsers(Model model,
-                            HttpSession session) {
+    @GetMapping("/users")
+    public String listUsers(
+            HttpSession session,
+            Model model
+    ) {
 
         User loggedUser =
                 (User) session.getAttribute("loggedUser");
 
         if(loggedUser == null) {
+
             return "redirect:/login";
         }
 
         if(loggedUser.getType() != UserType.ADMIN) {
-            return "redirect:/";
+
+            return "redirect:/home";
         }
 
         model.addAttribute(
                 "users",
-                service.findAll()
+                userService.findAll()
         );
 
         return "user/list";
     }
 
 
-    @PostMapping("/{id}/make-admin")
-    public String makeAdmin(@PathVariable Integer id,
-                            HttpSession session) {
+
+    @GetMapping("/users/make-admin/{id}")
+    public String makeAdmin(
+            @PathVariable Integer id,
+            HttpSession session
+    ) {
 
         User loggedUser =
                 (User) session.getAttribute("loggedUser");
 
-        // NÃO LOGADO
         if(loggedUser == null) {
+
             return "redirect:/login";
         }
 
-        // NÃO É ADMIN
         if(loggedUser.getType() != UserType.ADMIN) {
-            return "redirect:/";
+
+            return "redirect:/home";
         }
 
-        service.makeAdmin(id);
+        userService.makeAdmin(id);
 
-        return "redirect:/users";
+        return "redirect:/user";
     }
 }

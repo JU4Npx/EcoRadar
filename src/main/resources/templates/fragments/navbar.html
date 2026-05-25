@@ -13,9 +13,17 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link fs-5" href="/favorites">Favoritos</a></li>
                 <li><a class="nav-link fs-5" href="/map">Mapa</a></li>
+                <li th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+
+                    <a class="nav-link fs-5"
+                       th:href="@{/users}">
+
+                        Gerenciar Usuários
+                    </a>
+                </li>
                 <li class="nav-item dropdown"
                     th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
-                    <a class="nav-link dropdown-toggle"
+                    <a class="nav-link dropdown-toggle fs-5"
                        href="#"
                        role="button"
                        data-bs-toggle="dropdown"
@@ -40,14 +48,6 @@
                             </a>
                         </li>
                     </ul>
-                </li>
-                <li th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
-
-                    <a class="dropdown-item"
-                       th:href="@{/users}">
-
-                        Gerenciar Usuários
-                    </a>
                 </li>
             </ul>
         </div>

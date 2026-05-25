@@ -17,30 +17,19 @@ public class UserService {
     @Autowired
     private UserRepository repository;
 
-    /*
-    |--------------------------------------------------------------------------
-    | SAVE USER
-    |--------------------------------------------------------------------------
-    */
+
 
     public User save(User user) {
 
-        user.setCreatedAt(
-                LocalDateTime.now()
-        );
+        System.out.println("SALVANDO USUARIO");
 
-        user.setUpdatedAt(
-                LocalDateTime.now()
-        );
+        user.setCreatedAt(LocalDateTime.now());
+
+        user.setUpdatedAt(LocalDateTime.now());
 
         return repository.save(user);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE USER
-    |--------------------------------------------------------------------------
-    */
 
     public User update(User user) {
 
@@ -103,7 +92,14 @@ public class UserService {
 
     public boolean emailExists(String email) {
 
-        return repository.existsByEmail(email);
+        System.out.println("VERIFICANDO EMAIL: " + email);
+
+        boolean exists =
+                repository.findByEmail(email).isPresent();
+
+        System.out.println("EMAIL EXISTE? " + exists);
+
+        return exists;
     }
 
     /*
