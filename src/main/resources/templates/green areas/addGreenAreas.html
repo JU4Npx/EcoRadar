@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title>Adicionar Areas Verdes</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<main class="container py-4">
+    <section class="green-area-panel bg-white p-4 mx-auto">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h4 m-0">Adicionar area verde</h1>
+            <a class="btn btn-outline-success" th:href="@{/map}">
+                <i class="bi bi-map me-2"></i>Mapa
+            </a>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+        <form th:action="@{/areas-verdes/salvar}" th:object="${greenArea}" method="post" class="row g-3">
+            <div class="col-md-8">
+                <label for="name" class="form-label">Nome</label>
+                <input id="name" type="text" th:field="*{name}" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="type" class="form-label">Tipo</label>
+                <select id="type" th:field="*{type}" class="form-select" required>
+                    <option value="">Selecione</option>
+                    <option th:each="type : ${types}" th:value="${type}" th:text="${type.displayName}"></option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label for="description" class="form-label">Descricao</label>
+                <textarea id="description" th:field="*{description}" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" th:field="*{status}" class="form-select" required>
+                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label for="latitude" class="form-label">Latitude</label>
+                <input id="latitude" type="number" step="0.0000001" th:field="*{address.latitude}" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="longitude" class="form-label">Longitude</label>
+                <input id="longitude" type="number" step="0.0000001" th:field="*{address.longitude}" class="form-control" required>
+            </div>
+
+            <div class="col-md-3">
+                <label for="cep" class="form-label">CEP</label>
+                <input id="cep" type="text" th:field="*{address.cep}" class="form-control" maxlength="10">
+            </div>
+
+            <div class="col-md-5">
+                <label for="street" class="form-label">Rua</label>
+                <input id="street" type="text" th:field="*{address.street}" class="form-control" maxlength="100">
+            </div>
+
+            <div class="col-md-4">
+                <label for="neighborhood" class="form-label">Bairro</label>
+                <input id="neighborhood" type="text" th:field="*{address.neighborhood}" class="form-control" maxlength="100">
+            </div>
+
+            <div class="col-md-6">
+                <label for="city" class="form-label">Cidade</label>
+                <input id="city" type="text" th:field="*{address.city}" class="form-control" maxlength="100">
+            </div>
+
+            <div class="col-md-6">
+                <label for="state" class="form-label">Estado</label>
+                <input id="state" type="text" th:field="*{address.state}" class="form-control" maxlength="50">
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" th:href="@{/home}">Cancelar</a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check2-circle me-2"></i>Salvar
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

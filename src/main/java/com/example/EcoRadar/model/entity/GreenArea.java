@@ -32,4 +32,63 @@ public class GreenArea {
 
     @OneToMany(mappedBy = "greenArea")
     private List<Event> events;
+
+    public GreenArea() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public GreenAreaType getType() {
+        return type;
+    }
+
+    public void setType(GreenAreaType type) {
+        this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public GreenAreaStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(GreenAreaStatus status) {
+        this.status = status;
+    }
+
+    public GreenAreaAddress getAddress() {
+        return address;
+    }
+
+    public void setAddress(GreenAreaAddress address) {
+        this.address = address;
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
 }

@@ -123,3 +123,8 @@ body{background-color: #A5D6A7
     height: 600px;
     width: 100%;
 }
+
+.green-area-panel {
+    max-width: 980px;
+    border-radius: 4px;
+}

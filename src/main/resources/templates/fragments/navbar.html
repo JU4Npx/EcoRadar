@@ -28,6 +28,28 @@
                        role="button"
                        data-bs-toggle="dropdown"
                        aria-expanded="false">
+                        Áreas Verdes
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item"
+                               th:href="@{/areas-verdes/nova}">
+                                Adicionar Área Verde
+                            </a>
+                            <a class="dropdown-item"
+                               th:href="@{/areas-verdes/nova}">
+                                Editar Área Verde
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown"
+                    th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+                    <a class="nav-link dropdown-toggle fs-5"
+                       href="#"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false">
                         Eventos
                     </a>
                     <ul class="dropdown-menu">

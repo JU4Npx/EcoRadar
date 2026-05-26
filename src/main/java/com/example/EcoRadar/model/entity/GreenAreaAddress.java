@@ -29,4 +29,44 @@ public class GreenAreaAddress extends Address {
 
     public GreenAreaAddress() {
     }
+
+    public Integer getGreenAreaAddressId() {
+        return greenAreaAddressId;
+    }
+
+    public void setGreenAreaAddressId(Integer greenAreaAddressId) {
+        this.greenAreaAddressId = greenAreaAddressId;
+    }
+
+    public GreenArea getGreenArea() {
+        return greenArea;
+    }
+
+    public void setGreenArea(GreenArea greenArea) {
+        this.greenArea = greenArea;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
 }
