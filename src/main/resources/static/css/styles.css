@@ -128,3 +128,8 @@ body{background-color: #A5D6A7
     max-width: 980px;
     border-radius: 4px;
 }
+
+.event-panel {
+    max-width: 900px;
+    border-radius: 4px;
+}

@@ -1,11 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Áreas Verdes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title>Editar Areas Verdes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+<div th:replace="fragments/navbar :: navbar"></div>
 
+<main class="container py-4">
+    <section class="green-area-panel bg-white p-4 mx-auto">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h4 m-0">Editar áreas verdes</h1>
+            <a class="btn btn-success" th:href="@{/areas-verdes/nova}">
+                <i class="bi bi-plus-circle me-2"></i>Adicionar
+            </a>
+        </div>
 
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <div th:if="${#lists.isEmpty(greenAreas)}" class="alert alert-info mb-0">
+            Nenhuma área verde cadastrada.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(greenAreas)}" class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Cidade</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="area : ${greenAreas}">
+                    <td th:text="${area.name}">Nome</td>
+                    <td th:text="${area.type != null ? area.type.displayName : '-'}">Tipo</td>
+                    <td th:text="${area.status}">Status</td>
+                    <td th:text="${area.address != null ? area.address.city : '-'}">Cidade</td>
+                    <td class="text-end">
+                        <a class="btn btn-outline-success btn-sm"
+                           th:href="@{/areas-verdes/editar/{id}(id=${area.id})}">
+                            <i class="bi bi-pencil-square me-1"></i>Editar
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
