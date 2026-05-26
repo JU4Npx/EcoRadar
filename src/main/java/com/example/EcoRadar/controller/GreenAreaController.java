@@ -94,7 +94,6 @@ public class GreenAreaController {
         GreenArea greenArea = service.findById(id).orElse(null);
 
         if (greenArea == null) {
-            ra.addFlashAttribute("error", "Área verde não encontrada.");
             return "redirect:/areas-verdes/editar";
         }
 
