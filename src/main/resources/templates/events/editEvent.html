@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title>Editar Eventos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<main class="container py-4">
+    <section class="event-panel bg-white p-4 mx-auto">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h4 m-0">Editar eventos cadastrados</h1>
+            <a class="btn btn-success" th:href="@{/eventos/novo}">
+                <i class="bi bi-plus-circle me-2"></i>Criar
+            </a>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <div th:if="${#lists.isEmpty(eventos)}" class="alert alert-info mb-0">
+            Nenhum evento cadastrado.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(eventos)}" class="table-responsive mb-4">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Titulo</th>
+                    <th>Area verde</th>
+                    <th>Inicio</th>
+                    <th>Status</th>
+                    <th class="text-end">Acoes</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${eventos}">
+                    <td th:text="${item.title}">Titulo</td>
+                    <td th:text="${item.greenArea != null ? item.greenArea.name : '-'}">Area verde</td>
+                    <td th:text="${item.startDate}">Inicio</td>
+                    <td th:text="${item.status}">Status</td>
+                    <td class="text-end">
+                        <a class="btn btn-outline-success btn-sm"
+                           th:href="@{/eventos/editar/{id}(id=${item.id})}">
+                            <i class="bi bi-pencil-square me-1"></i>Editar
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <form th:if="${evento != null}"
+              th:action="@{/eventos/atualizar}"
+              th:object="${evento}"
+              method="post"
+              class="row g-3 border-top pt-4">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="col-md-8">
+                <label for="title" class="form-label">Titulo</label>
+                <input id="title" type="text" th:field="*{title}" class="form-control" required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" th:field="*{status}" class="form-select" required>
+                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label for="greenAreaId" class="form-label">Area verde</label>
+                <select id="greenAreaId" name="greenAreaId" class="form-select" required>
+                    <option th:each="area : ${areasVerdes}"
+                            th:value="${area.id}"
+                            th:selected="${evento.greenArea != null and area.id == evento.greenArea.id}"
+                            th:text="${area.name}"></option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label for="description" class="form-label">Descricao</label>
+                <textarea id="description" th:field="*{description}" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label for="startDate" class="form-label">Inicio</label>
+                <input id="startDate" type="datetime-local" th:field="*{startDate}" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="endDate" class="form-label">Fim</label>
+                <input id="endDate" type="datetime-local" th:field="*{endDate}" class="form-control" required>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" th:href="@{/eventos/editar}">Cancelar</a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check2-circle me-2"></i>Atualizar
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
