@@ -56,7 +56,6 @@
 
         </div>
 
-        <!-- TABELA -->
         <div class="table-responsive">
 
             <table class="table table-hover align-middle">
@@ -110,10 +109,10 @@
 
                     </td>
 
-                    <!-- AÇÕES -->
+                    
                     <td class="text-center">
 
-                        <!-- BOTÃO ADMIN -->
+
                         <form th:if="${user.type.name() != 'ADMIN'}"
                               th:action="@{/users/make-admin/{id}(id=${user.id})}"
                               method="get">
