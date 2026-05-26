@@ -30,7 +30,7 @@
 
         <form th:action="@{/eventos/salvar}" th:object="${evento}" method="post" class="row g-3">
             <div class="col-md-8">
-                <label for="title" class="form-label">Titulo</label>
+                <label for="title" class="form-label">Título</label>
                 <input id="title" type="text" th:field="*{title}" class="form-control" required>
             </div>
 
@@ -52,12 +52,12 @@
             </div>
 
             <div class="col-12">
-                <label for="description" class="form-label">Descriçao</label>
+                <label for="description" class="form-label">Descrição</label>
                 <textarea id="description" th:field="*{description}" class="form-control" rows="3"></textarea>
             </div>
 
             <div class="col-md-6">
-                <label for="startDate" class="form-label">Inicio</label>
+                <label for="startDate" class="form-label">Início</label>
                 <input id="startDate" type="datetime-local" th:field="*{startDate}" class="form-control" required>
             </div>
 

@@ -16,7 +16,7 @@
 <main class="container py-4">
     <section class="green-area-panel bg-white p-4 mx-auto">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h1 class="h4 m-0" th:text="${pageTitle} ?: 'Adicionar area verde'">Adicionar area verde</h1>
+            <h1 class="h4 m-0" th:text="${pageTitle} ?: 'Adicionar area verde'">Adicionar área verde</h1>
             <a class="btn btn-outline-success" th:href="@{/map}">
                 <i class="bi bi-map me-2"></i>Mapa
             </a>
@@ -42,7 +42,7 @@
             </div>
 
             <div class="col-12">
-                <label for="description" class="form-label">Descricao</label>
+                <label for="description" class="form-label">Descrição</label>
                 <textarea id="description" th:field="*{description}" class="form-control" rows="3"></textarea>
             </div>
 
