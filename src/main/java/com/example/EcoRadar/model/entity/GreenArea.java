@@ -16,18 +16,19 @@ public class GreenArea {
     @Column(name = "green_area_id")
     private Integer id;
 
-    @Column(name = "green_area_name")
+    @Column(name = "green_area_name", nullable = false, length = 255)
     private String name;
 
     @Enumerated(EnumType.STRING)
     private GreenAreaType type;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
     private GreenAreaStatus status;
 
-    @OneToOne(mappedBy = "greenArea", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "greenArea", cascade = CascadeType.ALL, orphanRemoval = true)
     private GreenAreaAddress address;
 
     @OneToMany(mappedBy = "greenArea")

@@ -9,6 +9,7 @@ import com.example.EcoRadar.model.enums.UserType;
 import com.example.EcoRadar.service.GreenAreaService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,6 +95,7 @@ public class GreenAreaController {
         GreenArea greenArea = service.findById(id).orElse(null);
 
         if (greenArea == null) {
+            ra.addFlashAttribute("error", "Area verde nao encontrada.");
             return "redirect:/areas-verdes/editar";
         }
 
@@ -123,11 +125,12 @@ public class GreenAreaController {
             return "redirect:/";
         }
 
-        if (greenArea.getAddress() != null) {
-            greenArea.getAddress().setGreenArea(greenArea);
+        try {
+            service.save(greenArea);
+        } catch (DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Nao foi possivel salvar. Verifique se os textos nao ultrapassam o limite permitido.");
+            return "redirect:/areas-verdes/nova";
         }
-
-        service.save(greenArea);
 
         ra.addFlashAttribute("message", "Area verde cadastrada com sucesso.");
 
@@ -145,11 +148,15 @@ public class GreenAreaController {
             return "redirect:/";
         }
 
-        if (greenArea.getAddress() != null) {
-            greenArea.getAddress().setGreenArea(greenArea);
+        try {
+            if (greenArea.getId() == null || service.update(greenArea.getId(), greenArea).isEmpty()) {
+                ra.addFlashAttribute("error", "Area verde nao encontrada.");
+                return "redirect:/areas-verdes/editar";
+            }
+        } catch (DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Nao foi possivel atualizar. Verifique se os textos nao ultrapassam o limite permitido.");
+            return "redirect:/areas-verdes/editar";
         }
-
-        service.save(greenArea);
 
         ra.addFlashAttribute("message", "Area verde atualizada com sucesso.");
 

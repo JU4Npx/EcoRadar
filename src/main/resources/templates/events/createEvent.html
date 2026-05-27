@@ -31,7 +31,7 @@
         <form th:action="@{/eventos/salvar}" th:object="${evento}" method="post" class="row g-3">
             <div class="col-md-8">
                 <label for="title" class="form-label">Título</label>
-                <input id="title" type="text" th:field="*{title}" class="form-control" required>
+                <input id="title" type="text" th:field="*{title}" class="form-control" maxlength="255" required>
             </div>
 
             <div class="col-md-4">

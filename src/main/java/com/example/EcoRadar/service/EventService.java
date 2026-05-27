@@ -4,6 +4,7 @@ import com.example.EcoRadar.model.entity.Event;
 import com.example.EcoRadar.model.entity.GreenArea;
 import com.example.EcoRadar.repository.EventRepository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +18,25 @@ public class EventService {
     @Autowired
     private EventRepository repository;
 
+    @Transactional
     public Event save(Event event) {
 
         return repository.save(event);
+    }
+
+    @Transactional
+    public Optional<Event> update(Integer id, Event formEvent, GreenArea greenArea) {
+
+        return repository.findById(id)
+                .map(event -> {
+                    event.setTitle(formEvent.getTitle());
+                    event.setDescription(formEvent.getDescription());
+                    event.setStartDate(formEvent.getStartDate());
+                    event.setEndDate(formEvent.getEndDate());
+                    event.setStatus(formEvent.getStatus());
+                    event.setGreenArea(greenArea);
+                    return repository.save(event);
+                });
     }
 
     public List<Event> findAll() {
@@ -48,6 +65,7 @@ public class EventService {
         );
     }
 
+    @Transactional
     public void delete(Integer id) {
 
         repository.deleteById(id);

@@ -3,6 +3,7 @@ package com.example.EcoRadar.model.entity;
 import com.example.EcoRadar.model.enums.EventStatus;
 
 import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -15,14 +16,18 @@ public class Event {
     @Column(name = "event_id")
     private Integer id;
 
+    @Column(nullable = false, length = 255)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "start_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startDate;
 
     @Column(name = "end_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)

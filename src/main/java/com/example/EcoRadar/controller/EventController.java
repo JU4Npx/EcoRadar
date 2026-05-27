@@ -40,7 +40,7 @@ public class EventController {
                 service.findAll()
         );
 
-        return "event/lista";
+        return "events/editEvent";
     }
 
     @GetMapping("/novo")
@@ -170,8 +170,10 @@ public class EventController {
             return "redirect:/eventos/editar";
         }
 
-        event.setGreenArea(greenArea);
-        service.save(event);
+        if (event.getId() == null || service.update(event.getId(), event, greenArea).isEmpty()) {
+            ra.addFlashAttribute("error", "Evento nao encontrado.");
+            return "redirect:/eventos/editar";
+        }
 
         ra.addFlashAttribute("message", "Evento atualizado com sucesso.");
 
