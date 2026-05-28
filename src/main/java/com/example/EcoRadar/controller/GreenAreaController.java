@@ -49,7 +49,7 @@ public class GreenAreaController {
 
         model.addAttribute("types", GreenAreaType.values());
         model.addAttribute("statuses", GreenAreaStatus.values());
-        model.addAttribute("pageTitle", "Adicionar area verde");
+        model.addAttribute("pageTitle", "Adicionar área verde");
         model.addAttribute("formAction", "/areas-verdes/salvar");
         model.addAttribute("submitLabel", "Salvar");
         model.addAttribute("cancelUrl", "/home");
