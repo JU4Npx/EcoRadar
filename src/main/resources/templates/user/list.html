@@ -28,11 +28,11 @@
 
 <div class="container vh-100 d-flex justify-content-center align-items-center">
 
-    <!-- CONTAINER BRANCO -->
+
     <div class="card shadow border-0 rounded-4 p-4 w-100"
          style="max-width: 1100px;">
 
-        <!-- TOPO -->
+
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
@@ -82,15 +82,15 @@
 
                 <tr th:each="user : ${users}">
 
-                    <!-- ID -->
+
                     <td th:text="${user.id}">
                     </td>
 
-                    <!-- EMAIL -->
+
                     <td th:text="${user.email}">
                     </td>
 
-                    <!-- TIPO -->
+
                     <td>
 
                         <span th:if="${user.type.name() == 'ADMIN'}"
@@ -115,7 +115,7 @@
 
                         <form th:if="${user.type.name() != 'ADMIN'}"
                               th:action="@{/users/make-admin/{id}(id=${user.id})}"
-                              method="get">
+                              method="post">
 
                             <button type="submit"
                                     class="btn btn-success btn-sm">
@@ -138,7 +138,7 @@
 
                 </tr>
 
-                <!-- SEM USUÁRIOS -->
+
                 <tr th:if="${#lists.isEmpty(users)}">
 
                     <td colspan="4"

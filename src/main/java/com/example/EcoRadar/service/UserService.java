@@ -40,55 +40,35 @@ public class UserService {
         return repository.save(user);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FIND ALL USERS
-    |--------------------------------------------------------------------------
-    */
+
 
     public List<User> findAll() {
 
         return repository.findAll();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FIND USER BY ID
-    |--------------------------------------------------------------------------
-    */
+
 
     public Optional<User> findById(Integer id) {
 
         return repository.findById(id);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FIND USER BY EMAIL
-    |--------------------------------------------------------------------------
-    */
+
 
     public Optional<User> findByEmail(String email) {
 
         return repository.findByEmail(email);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE USER
-    |--------------------------------------------------------------------------
-    */
+
 
     public void delete(Integer id) {
 
         repository.deleteById(id);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CHECK IF EMAIL EXISTS
-    |--------------------------------------------------------------------------
-    */
+
 
     public boolean emailExists(String email) {
 
@@ -102,11 +82,7 @@ public class UserService {
         return exists;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN AUTHENTICATION
-    |--------------------------------------------------------------------------
-    */
+
 
     public User authenticate(String email,
                              String password) {
@@ -120,7 +96,7 @@ public class UserService {
 
         User user = optionalUser.get();
 
-        // LOGIN TEMPORÁRIO SEM BCrypt
+
         if(password.equals(user.getPassword())) {
 
             return user;
@@ -129,11 +105,7 @@ public class UserService {
         return null;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | MAKE ADMIN
-    |--------------------------------------------------------------------------
-    */
+
 
     public void makeAdmin(Integer userId) {
 

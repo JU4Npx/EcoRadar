@@ -3,7 +3,7 @@ package com.example.EcoRadar.controller;
 import com.example.EcoRadar.model.entity.User;
 import com.example.EcoRadar.model.enums.UserType;
 import com.example.EcoRadar.service.UserService;
-
+import org.springframework.web.bind.annotation.PostMapping;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,6 @@ public class UserController {
 
     @Autowired
     private UserService userService;
-
 
     @GetMapping("/users")
     public String listUsers(
@@ -47,9 +46,7 @@ public class UserController {
         return "user/list";
     }
 
-
-
-    @GetMapping("/users/make-admin/{id}")
+    @PostMapping("/users/make-admin/{id}")
     public String makeAdmin(
             @PathVariable Integer id,
             HttpSession session
@@ -70,6 +67,6 @@ public class UserController {
 
         userService.makeAdmin(id);
 
-        return "redirect:/user";
+        return "redirect: user/list";
     }
 }
