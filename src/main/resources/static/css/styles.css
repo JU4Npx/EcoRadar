@@ -133,3 +133,32 @@ body{background-color: #A5D6A7
     max-width: 900px;
     border-radius: 4px;
 }
+
+.user-management-card {
+    max-width: 1280px;
+}
+
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 6px 16px;
+    min-width: 420px;
+}
+
+.permission-toggle-form {
+    margin: 0;
+}
+
+.permission-switch {
+    min-height: 28px;
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.permission-switch .form-check-label {
+    font-size: 0.88rem;
+}
+
+.permission-badges {
+    min-width: 420px;
+}

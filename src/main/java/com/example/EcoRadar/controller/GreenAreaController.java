@@ -302,4 +302,82 @@ public class GreenAreaController {
 
         return "redirect:/areas-verdes/editar";
     }
+
+    @GetMapping("/remover")
+    public String removeList(
+            Model model,
+            HttpSession session
+    ) {
+
+        User user =
+                (User) session.getAttribute("loggedUser");
+
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        if (!user.hasPermission(
+                Permission.DELETE_GREEN_AREA
+        )) {
+
+            return "redirect:/home";
+        }
+
+        model.addAttribute(
+                "greenAreas",
+                service.findAll()
+        );
+
+        return "green areas/removeGreenAreas";
+    }
+
+    @PostMapping("/remover/{id}")
+    public String remove(
+            @PathVariable Integer id,
+            HttpSession session,
+            RedirectAttributes ra
+    ) {
+
+        User user =
+                (User) session.getAttribute("loggedUser");
+
+        if (user == null ||
+                !user.hasPermission(
+                        Permission.DELETE_GREEN_AREA
+                )) {
+
+            return "redirect:/home";
+        }
+
+        if (service.findById(id).isEmpty()) {
+
+            ra.addFlashAttribute(
+                    "error",
+                    "Area verde nao encontrada."
+            );
+
+            return "redirect:/areas-verdes/remover";
+        }
+
+        try {
+
+            service.delete(id);
+
+        } catch (DataIntegrityViolationException e) {
+
+            ra.addFlashAttribute(
+                    "error",
+                    "Nao foi possivel remover. Existem eventos ou favoritos vinculados a esta area verde."
+            );
+
+            return "redirect:/areas-verdes/remover";
+        }
+
+        ra.addFlashAttribute(
+                "message",
+                "Area verde removida com sucesso."
+        );
+
+        return "redirect:/areas-verdes/remover";
+    }
 }

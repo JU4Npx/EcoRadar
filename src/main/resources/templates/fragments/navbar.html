@@ -61,37 +61,33 @@
 
                 </li>
 
-                <!-- GERENCIAR USUÁRIOS -->
-
                 <li th:if="${session.loggedUser != null
-                    and session.loggedUser.permissions.contains(
+                    and session.loggedUser.hasPermission(
                     T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
 
                     <a class="nav-link fs-5"
                        th:href="@{/users}">
 
-                        Gerenciar Usuários
+                        Gerenciar Usu&aacute;rios
 
                     </a>
 
                 </li>
 
-                <!-- ÁREAS VERDES -->
-
                 <li class="nav-item dropdown"
                     th:if="${session.loggedUser != null and (
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)
 
                         or
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)
 
                         or
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)
 
                     )}">
@@ -102,31 +98,43 @@
                        data-bs-toggle="dropdown"
                        aria-expanded="false">
 
-                        Áreas Verdes
+                        &Aacute;reas Verdes
 
                     </a>
 
                     <ul class="dropdown-menu">
 
-                        <li th:if="${session.loggedUser.permissions.contains(
+                        <li th:if="${session.loggedUser.hasPermission(
                             T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)}">
 
                             <a class="dropdown-item"
                                th:href="@{/areas-verdes/nova}">
 
-                                Adicionar Área Verde
+                                Adicionar &Aacute;rea Verde
 
                             </a>
 
                         </li>
 
-                        <li th:if="${session.loggedUser.permissions.contains(
+                        <li th:if="${session.loggedUser.hasPermission(
                             T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)}">
 
                             <a class="dropdown-item"
                                th:href="@{/areas-verdes/editar}">
 
-                                Editar Área Verde
+                                Editar &Aacute;rea Verde
+
+                            </a>
+
+                        </li>
+
+                        <li th:if="${session.loggedUser.hasPermission(
+                            T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)}">
+
+                            <a class="dropdown-item"
+                               th:href="@{/areas-verdes/remover}">
+
+                                Remover &Aacute;rea Verde
 
                             </a>
 
@@ -136,22 +144,20 @@
 
                 </li>
 
-                <!-- EVENTOS -->
-
                 <li class="nav-item dropdown"
                     th:if="${session.loggedUser != null and (
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)
 
                         or
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)
 
                         or
 
-                        session.loggedUser.permissions.contains(
+                        session.loggedUser.hasPermission(
                         T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)
 
                     )}">
@@ -168,7 +174,7 @@
 
                     <ul class="dropdown-menu">
 
-                        <li th:if="${session.loggedUser.permissions.contains(
+                        <li th:if="${session.loggedUser.hasPermission(
                             T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)}">
 
                             <a class="dropdown-item"
@@ -180,7 +186,7 @@
 
                         </li>
 
-                        <li th:if="${session.loggedUser.permissions.contains(
+                        <li th:if="${session.loggedUser.hasPermission(
                             T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)}">
 
                             <a class="dropdown-item"
@@ -192,7 +198,7 @@
 
                         </li>
 
-                        <li th:if="${session.loggedUser.permissions.contains(
+                        <li th:if="${session.loggedUser.hasPermission(
                             T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)}">
 
                             <a class="dropdown-item"

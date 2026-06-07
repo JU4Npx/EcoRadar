@@ -8,7 +8,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>EcoRadar - Usuários</title>
+    <title>EcoRadar - Usu&aacute;rios</title>
 
     <link rel="icon"
           type="image/png"
@@ -27,21 +27,20 @@
 
 <div th:replace="fragments/navbar :: navbar"></div>
 
-<div class="container vh-100 d-flex justify-content-center align-items-center">
+<div class="container py-5 d-flex justify-content-center align-items-start">
 
-    <div class="card shadow border-0 rounded-4 p-4 w-100"
-         style="max-width: 1100px;">
+    <div class="card shadow border-0 rounded-4 p-4 w-100 user-management-card">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
 
                 <h1 class="fw-bold mb-1">
-                    Gerenciamento de Usuários
+                    Gerenciamento de Usu&aacute;rios
                 </h1>
 
                 <p class="text-muted mb-0">
-                    Lista completa de usuários cadastrados
+                    Defina quais altera&ccedil;&otilde;es cada administrador pode fazer
                 </p>
 
             </div>
@@ -69,8 +68,12 @@
 
                     <th>Tipo</th>
 
+                    <th>
+                        Permiss&otilde;es administrativas
+                    </th>
+
                     <th class="text-center">
-                        Ações
+                        A&ccedil;&otilde;es
                     </th>
 
                 </tr>
@@ -103,18 +106,86 @@
 
                     </td>
 
-                    <td class="text-center">
+                    <td>
 
-                        <!-- SUPER ADMIN -->
-                        <span th:if="${user.id == 1}"
-                              class="badge bg-dark">
+                        <div th:if="${user.id == 1}"
+                             class="permissions-grid">
 
-                            SUPER ADMIN
+                            <div th:each="permission : ${managedAdminPermissions}"
+                                 class="form-check form-switch permission-switch">
+
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       checked
+                                       disabled>
+
+                                <label class="form-check-label"
+                                       th:text="${permission.displayName}">
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div th:if="${user.id != 1 and user.type.name() == 'ADMIN' and canEditAdminPermissions}"
+                             class="permissions-grid">
+
+                            <form th:each="permission : ${managedAdminPermissions}"
+                                  th:action="@{/users/{id}/permissions/{permission}(id=${user.id},permission=${permission.name()})}"
+                                  method="post"
+                                  class="permission-toggle-form">
+
+                                <div class="form-check form-switch permission-switch">
+
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           name="enabled"
+                                           value="true"
+                                           th:id="|permission-${user.id}-${permission.name()}|"
+                                           th:checked="${user.permissions.contains(permission)}"
+                                           onchange="this.form.submit()">
+
+                                    <label class="form-check-label"
+                                           th:for="|permission-${user.id}-${permission.name()}|"
+                                           th:text="${permission.displayName}">
+                                    </label>
+
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                        <div th:if="${user.id != 1 and user.type.name() == 'ADMIN' and !canEditAdminPermissions}"
+                             class="permission-badges">
+
+                            <span th:each="permission : ${managedAdminPermissions}"
+                                  class="badge me-1 mb-1"
+                                  th:classappend="${user.permissions.contains(permission)} ? ' text-bg-success' : ' text-bg-secondary'"
+                                  th:text="${permission.displayName}">
+                            </span>
+
+                        </div>
+
+                        <span th:if="${user.id != 1 and user.type.name() == 'USER'}"
+                              class="text-muted">
+
+                            Promova para admin antes de liberar permiss&otilde;es.
 
                         </span>
 
-                        <!-- TORNAR ADMIN -->
-                        <form th:if="${user.id != 1 and user.type.name() == 'USER'}"
+                    </td>
+
+                    <td class="text-center">
+
+                        <span th:if="${user.id == 1}"
+                              class="badge bg-dark">
+
+                            SUPER ADMIN FIXO
+
+                        </span>
+
+                        <form th:if="${canEditAdminPermissions and user.id != 1 and user.type.name() == 'USER'}"
                               th:action="@{/users/make-admin/{id}(id=${user.id})}"
                               method="post"
                               class="d-inline">
@@ -128,8 +199,7 @@
 
                         </form>
 
-                        <!-- REMOVER ADMIN -->
-                        <form th:if="${user.id != 1 and user.type.name() == 'ADMIN'}"
+                        <form th:if="${canEditAdminPermissions and user.id != 1 and user.type.name() == 'ADMIN'}"
                               th:action="@{/users/remove-admin/{id}(id=${user.id})}"
                               method="post"
                               class="d-inline">
@@ -143,16 +213,23 @@
 
                         </form>
 
+                        <span th:if="${!canEditAdminPermissions and user.id != 1}"
+                              class="text-muted">
+
+                            Somente leitura
+
+                        </span>
+
                     </td>
 
                 </tr>
 
                 <tr th:if="${#lists.isEmpty(users)}">
 
-                    <td colspan="4"
+                    <td colspan="5"
                         class="text-center text-muted py-4">
 
-                        Nenhum usuário encontrado.
+                        Nenhum usu&aacute;rio encontrado.
 
                     </td>
 

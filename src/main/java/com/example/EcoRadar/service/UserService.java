@@ -5,6 +5,8 @@ import com.example.EcoRadar.model.enums.Permission;
 import com.example.EcoRadar.model.enums.UserType;
 import com.example.EcoRadar.repository.UserRepository;
 
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,9 +56,44 @@ public class UserService {
                 .orElse(null);
     }
 
+    public User refreshLoggedUser(
+            HttpSession session
+    ) {
+
+        Object loggedUserAttribute =
+                session.getAttribute("loggedUser");
+
+        if (!(loggedUserAttribute instanceof User)) {
+            return null;
+        }
+
+        User loggedUser =
+                (User) loggedUserAttribute;
+
+        if (loggedUser.getId() == null) {
+            return null;
+        }
+
+        Optional<User> refreshedUser =
+                repository.findById(loggedUser.getId());
+
+        if (refreshedUser.isEmpty()) {
+
+            session.removeAttribute("loggedUser");
+            return null;
+        }
+
+        session.setAttribute(
+                "loggedUser",
+                refreshedUser.get()
+        );
+
+        return refreshedUser.get();
+    }
+
     public void delete(Integer id) {
 
-        if (id == 1) {
+        if (isMainAdmin(id)) {
             return;
         }
 
@@ -96,7 +133,7 @@ public class UserService {
 
     public void makeAdmin(Integer userId) {
 
-        if (userId == 1) {
+        if (isMainAdmin(userId)) {
             return;
         }
 
@@ -107,7 +144,12 @@ public class UserService {
 
             User user = optionalUser.get();
 
+            if (user.getType() != UserType.ADMIN) {
+                user.getPermissions().clear();
+            }
+
             user.setType(UserType.ADMIN);
+            user.setUpdatedAt(LocalDateTime.now());
 
             repository.save(user);
         }
@@ -116,7 +158,7 @@ public class UserService {
 
     public void removeAdmin(Integer userId) {
 
-        if (userId == 1) {
+        if (isMainAdmin(userId)) {
             return;
         }
 
@@ -130,6 +172,7 @@ public class UserService {
             user.setType(UserType.USER);
 
             user.getPermissions().clear();
+            user.setUpdatedAt(LocalDateTime.now());
 
             repository.save(user);
         }
@@ -140,6 +183,11 @@ public class UserService {
             Integer userId,
             Permission permission
     ) {
+
+        if (isMainAdmin(userId) ||
+                permission == Permission.GRANT_ADMIN) {
+            return;
+        }
 
         Optional<User> optionalUser =
                 repository.findById(userId);
@@ -155,6 +203,8 @@ public class UserService {
             user.getPermissions()
                     .add(permission);
 
+            user.setUpdatedAt(LocalDateTime.now());
+
             repository.save(user);
         }
     }
@@ -165,7 +215,8 @@ public class UserService {
             Permission permission
     ) {
 
-        if (userId == 1) {
+        if (isMainAdmin(userId) ||
+                permission == Permission.GRANT_ADMIN) {
             return;
         }
 
@@ -179,8 +230,32 @@ public class UserService {
             user.getPermissions()
                     .remove(permission);
 
+            user.setUpdatedAt(LocalDateTime.now());
+
             repository.save(user);
         }
+    }
+
+    public void setPermission(
+            Integer userId,
+            Permission permission,
+            boolean enabled
+    ) {
+
+        if (enabled) {
+
+            addPermission(
+                    userId,
+                    permission
+            );
+
+            return;
+        }
+
+        removePermission(
+                userId,
+                permission
+        );
     }
 
     public boolean isMainAdmin(
