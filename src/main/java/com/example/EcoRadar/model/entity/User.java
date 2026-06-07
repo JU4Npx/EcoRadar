@@ -1,9 +1,13 @@
 package com.example.EcoRadar.model.entity;
 
+import com.example.EcoRadar.model.enums.Permission;
 import com.example.EcoRadar.model.enums.UserType;
+
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -14,8 +18,10 @@ public class User {
     @Column(name = "user_id")
     private Integer id;
 
-    @Column(nullable = false,
-            unique = true)
+    @Column(
+            nullable = false,
+            unique = true
+    )
     private String email;
 
     @Column(nullable = false)
@@ -25,22 +31,31 @@ public class User {
     @Column(nullable = false)
     private UserType type = UserType.USER;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_permissions",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private Set<Permission> permissions = new HashSet<>();
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
     public User() {
     }
 
-
-    public User(String email,
-                String password,
-                UserType type,
-                LocalDateTime createdAt,
-                LocalDateTime updatedAt) {
+    public User(
+            String email,
+            String password,
+            UserType type,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
 
         this.email = email;
         this.password = password;
@@ -48,8 +63,6 @@ public class User {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
-
-
 
     public Integer getId() {
         return id;
@@ -83,11 +96,30 @@ public class User {
         this.type = type;
     }
 
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(
+            Set<Permission> permissions
+    ) {
+        this.permissions = permissions;
+    }
+
+    public boolean hasPermission(
+            Permission permission
+    ) {
+
+        return permissions.contains(permission);
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(
+            LocalDateTime createdAt
+    ) {
         this.createdAt = createdAt;
     }
 
@@ -95,7 +127,9 @@ public class User {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(
+            LocalDateTime updatedAt
+    ) {
         this.updatedAt = updatedAt;
     }
 }

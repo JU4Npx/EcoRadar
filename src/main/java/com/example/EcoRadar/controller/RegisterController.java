@@ -4,6 +4,7 @@ import com.example.EcoRadar.model.entity.User;
 import com.example.EcoRadar.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,23 +19,14 @@ public class RegisterController {
     @Autowired
     private UserService userService;
 
-    /*
-    |--------------------------------------------------------------------------
-    | REGISTER PAGE
-    |--------------------------------------------------------------------------
-    */
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/register")
     public String showRegister() {
 
         return "register/register";
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REGISTER USER
-    |--------------------------------------------------------------------------
-    */
 
     @PostMapping("/register")
     public String handleRegister(
@@ -59,7 +51,10 @@ public class RegisterController {
 
         user.setEmail(email);
 
-        user.setPassword(password);
+
+        user.setPassword(
+                passwordEncoder.encode(password)
+        );
 
         userService.save(user);
 

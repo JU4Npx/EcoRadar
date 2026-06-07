@@ -6,6 +6,7 @@ import com.example.EcoRadar.service.UserService;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.ui.Model;
@@ -20,6 +21,8 @@ public class LoginController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
     public String loginPage() {
@@ -38,13 +41,13 @@ public class LoginController {
             Model model
     ) {
 
-        User user =
-                userService.authenticate(
-                        email,
-                        password
-                );
+        User user = userService.findByEmail(email);
 
-        if(user == null) {
+        if(user == null ||
+                !passwordEncoder.matches(
+                        password,
+                        user.getPassword()
+                )) {
 
             model.addAttribute(
                     "error",

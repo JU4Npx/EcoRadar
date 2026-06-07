@@ -4,7 +4,7 @@ import com.example.EcoRadar.model.entity.Event;
 import com.example.EcoRadar.model.entity.GreenArea;
 import com.example.EcoRadar.model.entity.User;
 import com.example.EcoRadar.model.enums.EventStatus;
-import com.example.EcoRadar.model.enums.UserType;
+import com.example.EcoRadar.model.enums.Permission;
 import com.example.EcoRadar.service.EventService;
 import com.example.EcoRadar.service.GreenAreaService;
 
@@ -54,8 +54,10 @@ public class EventController {
             return "redirect:/login";
         }
 
-        if(user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(!user.hasPermission(
+                Permission.CREATE_EVENT
+        )) {
+            return "redirect:/home";
         }
 
         Event event = new Event();
@@ -77,9 +79,12 @@ public class EventController {
         User user =
                 (User) session.getAttribute("loggedUser");
 
-        // PROTEÇÃO BACKEND
-        if(user == null || user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(user == null ||
+                !user.hasPermission(
+                        Permission.CREATE_EVENT
+                )) {
+
+            return "redirect:/home";
         }
 
         GreenArea greenArea = greenAreaService.findById(greenAreaId).orElse(null);
@@ -109,8 +114,11 @@ public class EventController {
             return "redirect:/login";
         }
 
-        if(user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(!user.hasPermission(
+                Permission.EDIT_EVENT
+        )) {
+
+            return "redirect:/home";
         }
 
         model.addAttribute("eventos", service.findAll());
@@ -131,8 +139,11 @@ public class EventController {
             return "redirect:/login";
         }
 
-        if(user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(!user.hasPermission(
+                Permission.EDIT_EVENT
+        )) {
+
+            return "redirect:/home";
         }
 
         Event event = service.findById(id).orElse(null);
@@ -159,8 +170,12 @@ public class EventController {
         User user =
                 (User) session.getAttribute("loggedUser");
 
-        if(user == null || user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(user == null ||
+                !user.hasPermission(
+                        Permission.EDIT_EVENT
+                )) {
+
+            return "redirect:/home";
         }
 
         GreenArea greenArea = greenAreaService.findById(greenAreaId).orElse(null);
@@ -191,8 +206,11 @@ public class EventController {
             return "redirect:/login";
         }
 
-        if(user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(!user.hasPermission(
+                Permission.DELETE_EVENT
+        )) {
+
+            return "redirect:/home";
         }
 
         model.addAttribute("eventos", service.findAll());
@@ -208,8 +226,12 @@ public class EventController {
         User user =
                 (User) session.getAttribute("loggedUser");
 
-        if(user == null || user.getType() != UserType.ADMIN) {
-            return "redirect:/";
+        if(user == null ||
+                !user.hasPermission(
+                        Permission.DELETE_EVENT
+                )) {
+
+            return "redirect:/home";
         }
 
         if (service.findById(id).isEmpty()) {

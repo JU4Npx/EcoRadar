@@ -1,96 +1,253 @@
-<nav xmlns:th="http://www.thymeleaf.org" class="navbar navbar-expand-lg bg-body-tertiary" th:fragment="navbar">
+<nav xmlns:th="http://www.thymeleaf.org"
+     class="navbar navbar-expand-lg bg-body-tertiary"
+     th:fragment="navbar">
+
     <div class="container-fluid">
+
         <ul class="navbar-nav d-flex align-items-center me-0 mb-2 mb-lg-0">
-            <img src="/images/EcoRadarLogoSemNome.png" alt="EcoRadar" width="200" height="100" class="me-2">
-            <a class="navbar-brand ps-0" href="/home">EcoRadar</a>
+
+            <img src="/images/EcoRadarLogoSemNome.png"
+                 alt="EcoRadar"
+                 width="200"
+                 height="100"
+                 class="me-2">
+
+            <a class="navbar-brand ps-0"
+               href="/home">
+
+                EcoRadar
+
+            </a>
+
         </ul>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                aria-expanded="false" aria-label="Toggle navigation">
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+
             <span class="navbar-toggler-icon"></span>
+
         </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <div class="collapse navbar-collapse"
+             id="navbarSupportedContent">
+
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item" th:if="${session.loggedUser != null}"><a class="nav-link fs-5" href="/favorites">Favoritos</a></li>
-                <li><a class="nav-link fs-5" href="/map">Mapa</a></li>
-                <li th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+
+                <li class="nav-item"
+                    th:if="${session.loggedUser != null}">
+
+                    <a class="nav-link fs-5"
+                       href="/favorites">
+
+                        Favoritos
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a class="nav-link fs-5"
+                       href="/map">
+
+                        Mapa
+
+                    </a>
+
+                </li>
+
+                <!-- GERENCIAR USUÁRIOS -->
+
+                <li th:if="${session.loggedUser != null
+                    and session.loggedUser.permissions.contains(
+                    T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
 
                     <a class="nav-link fs-5"
                        th:href="@{/users}">
 
                         Gerenciar Usuários
+
                     </a>
+
                 </li>
+
+                <!-- ÁREAS VERDES -->
+
                 <li class="nav-item dropdown"
-                    th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+                    th:if="${session.loggedUser != null and (
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)
+
+                        or
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)
+
+                        or
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)
+
+                    )}">
+
                     <a class="nav-link dropdown-toggle fs-5"
                        href="#"
                        role="button"
                        data-bs-toggle="dropdown"
                        aria-expanded="false">
+
                         Áreas Verdes
+
                     </a>
+
                     <ul class="dropdown-menu">
-                        <li>
+
+                        <li th:if="${session.loggedUser.permissions.contains(
+                            T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)}">
+
                             <a class="dropdown-item"
                                th:href="@{/areas-verdes/nova}">
+
                                 Adicionar Área Verde
+
                             </a>
+
+                        </li>
+
+                        <li th:if="${session.loggedUser.permissions.contains(
+                            T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)}">
+
                             <a class="dropdown-item"
                                th:href="@{/areas-verdes/editar}">
+
                                 Editar Área Verde
+
                             </a>
+
                         </li>
+
                     </ul>
+
                 </li>
+
+                <!-- EVENTOS -->
+
                 <li class="nav-item dropdown"
-                    th:if="${session.loggedUser != null and session.loggedUser.type.name() == 'ADMIN'}">
+                    th:if="${session.loggedUser != null and (
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)
+
+                        or
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)
+
+                        or
+
+                        session.loggedUser.permissions.contains(
+                        T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)
+
+                    )}">
+
                     <a class="nav-link dropdown-toggle fs-5"
                        href="#"
                        role="button"
                        data-bs-toggle="dropdown"
                        aria-expanded="false">
+
                         Eventos
+
                     </a>
+
                     <ul class="dropdown-menu">
-                        <li>
+
+                        <li th:if="${session.loggedUser.permissions.contains(
+                            T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)}">
+
                             <a class="dropdown-item"
                                th:href="@{/eventos/novo}">
+
                                 Criar Evento
+
                             </a>
+
                         </li>
-                        <li>
-                            <a class="dropdown-item" th:href="@{/eventos/editar}">
+
+                        <li th:if="${session.loggedUser.permissions.contains(
+                            T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)}">
+
+                            <a class="dropdown-item"
+                               th:href="@{/eventos/editar}">
+
                                 Editar Evento
+
                             </a>
+
                         </li>
-                        <li>
-                            <a class="dropdown-item" th:href="@{/eventos/remover}">
+
+                        <li th:if="${session.loggedUser.permissions.contains(
+                            T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)}">
+
+                            <a class="dropdown-item"
+                               th:href="@{/eventos/remover}">
+
                                 Remover Evento
+
                             </a>
+
                         </li>
+
                     </ul>
+
                 </li>
+
             </ul>
+
         </div>
+
     </div>
+
     <div class="navbar mb-2 mb-lg-0 me-5">
+
         <ul class="list-unstyled navbar-nav me-auto mb-1 mb-lg-0">
 
-            <li class="nav-item" th:if="${session.loggedUser == null}">
-                <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/login}">
+            <li class="nav-item"
+                th:if="${session.loggedUser == null}">
+
+                <a class="btn btn-outline-success d-flex align-items-center perfil-btn"
+                   th:href="@{/login}">
+
                     <i class="bi bi-person-circle me-3 perfil-icon"></i>
+
                     Fazer Login
+
                 </a>
+
             </li>
 
-            <li class="nav-item" th:if="${session.loggedUser != null}">
-                <a class="btn btn-outline-success d-flex align-items-center perfil-btn" th:href="@{/perfil}">
+            <li class="nav-item"
+                th:if="${session.loggedUser != null}">
+
+                <a class="btn btn-outline-success d-flex align-items-center perfil-btn"
+                   th:href="@{/perfil}">
+
                     <i class="bi bi-person-circle me-3 perfil-icon"></i>
+
                     Meu Perfil
+
                 </a>
+
             </li>
 
         </ul>
+
     </div>
+
 </nav>
