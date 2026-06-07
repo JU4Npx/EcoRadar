@@ -27,6 +27,14 @@ public class UserService {
 
     public User save(User user) {
 
+        if (user.getName() == null ||
+                user.getName().isBlank()) {
+
+            user.setName(
+                    buildFallbackName(user.getEmail())
+            );
+        }
+
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -326,5 +334,27 @@ public class UserService {
 
                 )
                 .toList();
+    }
+
+    private String buildFallbackName(
+            String email
+    ) {
+
+        if (email == null ||
+                email.isBlank()) {
+
+            return "Usuario";
+        }
+
+        int atIndex = email.indexOf("@");
+
+        if (atIndex <= 0) {
+            return email;
+        }
+
+        return email.substring(
+                0,
+                atIndex
+        );
     }
 }

@@ -31,11 +31,23 @@ public class RegisterController {
     @PostMapping("/register")
     public String handleRegister(
 
+            @RequestParam String name,
             @RequestParam String email,
             @RequestParam String password,
+            @RequestParam String confirmPassword,
 
             RedirectAttributes ra
     ) {
+
+        if(!password.equals(confirmPassword)) {
+
+            ra.addFlashAttribute(
+                    "error",
+                    "As senhas nao conferem."
+            );
+
+            return "redirect:/register";
+        }
 
         if(userService.emailExists(email)) {
 
@@ -49,6 +61,7 @@ public class RegisterController {
 
         User user = new User();
 
+        user.setName(name.trim());
         user.setEmail(email);
 
 
