@@ -8,6 +8,7 @@ import com.example.EcoRadar.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -130,7 +131,6 @@ public class UserService {
         return null;
     }
 
-
     public void makeAdmin(Integer userId) {
 
         if (isMainAdmin(userId)) {
@@ -155,7 +155,6 @@ public class UserService {
         }
     }
 
-
     public void removeAdmin(Integer userId) {
 
         if (isMainAdmin(userId)) {
@@ -172,20 +171,19 @@ public class UserService {
             user.setType(UserType.USER);
 
             user.getPermissions().clear();
+
             user.setUpdatedAt(LocalDateTime.now());
 
             repository.save(user);
         }
     }
 
-
     public void addPermission(
             Integer userId,
             Permission permission
     ) {
 
-        if (isMainAdmin(userId) ||
-                permission == Permission.GRANT_ADMIN) {
+        if (isMainAdmin(userId)) {
             return;
         }
 
@@ -200,8 +198,7 @@ public class UserService {
                 return;
             }
 
-            user.getPermissions()
-                    .add(permission);
+            user.getPermissions().add(permission);
 
             user.setUpdatedAt(LocalDateTime.now());
 
@@ -209,14 +206,12 @@ public class UserService {
         }
     }
 
-
     public void removePermission(
             Integer userId,
             Permission permission
     ) {
 
-        if (isMainAdmin(userId) ||
-                permission == Permission.GRANT_ADMIN) {
+        if (isMainAdmin(userId)) {
             return;
         }
 
@@ -227,8 +222,7 @@ public class UserService {
 
             User user = optionalUser.get();
 
-            user.getPermissions()
-                    .remove(permission);
+            user.getPermissions().remove(permission);
 
             user.setUpdatedAt(LocalDateTime.now());
 
@@ -249,13 +243,13 @@ public class UserService {
                     permission
             );
 
-            return;
-        }
+        } else {
 
-        removePermission(
-                userId,
-                permission
-        );
+            removePermission(
+                    userId,
+                    permission
+            );
+        }
     }
 
     public boolean isMainAdmin(
@@ -264,5 +258,73 @@ public class UserService {
 
         return userId != null
                 && userId.equals(1);
+    }
+
+    public boolean hasPermission(
+            User user,
+            Permission permission
+    ) {
+
+        if (user == null) {
+            return false;
+        }
+
+        // Super Admin tem acesso total
+        if (isMainAdmin(user.getId())) {
+            return true;
+        }
+
+        if (user.getType() != UserType.ADMIN) {
+            return false;
+        }
+
+        return user.getPermissions()
+                .contains(permission);
+    }
+
+    public List<User> findAllFiltered(
+            String sort,
+            String search
+    ) {
+
+        String field = switch (sort) {
+
+            case "name" -> "name";
+            case "email" -> "email";
+            case "type" -> "type";
+
+            default -> "id";
+        };
+
+        List<User> users =
+                repository.findAll(
+                        Sort.by(field)
+                );
+
+        if (search == null ||
+                search.isBlank()) {
+
+            return users;
+        }
+
+        String filter =
+                search.toLowerCase();
+
+        return users.stream()
+                .filter(user ->
+
+                        (user.getName() != null &&
+                                user.getName()
+                                        .toLowerCase()
+                                        .contains(filter))
+
+                                ||
+
+                                user.getEmail()
+                                        .toLowerCase()
+                                        .contains(filter)
+
+                )
+                .toList();
     }
 }

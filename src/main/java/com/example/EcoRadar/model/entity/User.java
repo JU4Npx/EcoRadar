@@ -18,6 +18,9 @@ public class User {
     @Column(name = "user_id")
     private Integer id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(
             nullable = false,
             unique = true
@@ -49,14 +52,14 @@ public class User {
     public User() {
     }
 
-    public User(
-            String email,
-            String password,
-            UserType type,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
-    ) {
+    public User(String name,
+                String email,
+                String password,
+                UserType type,
+                LocalDateTime createdAt,
+                LocalDateTime updatedAt) {
 
+        this.name = name;
         this.email = email;
         this.password = password;
         this.type = type;
@@ -70,6 +73,13 @@ public class User {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {

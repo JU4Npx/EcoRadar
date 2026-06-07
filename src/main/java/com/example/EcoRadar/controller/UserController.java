@@ -34,21 +34,43 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    /*
+    |--------------------------------------------------------------------------
+    | LISTAR USUÁRIOS
+    |--------------------------------------------------------------------------
+    */
+
     @GetMapping("/users")
     public String listUsers(
+
             HttpSession session,
-            Model model
+            Model model,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = "id"
+            )
+            String sort,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String search
     ) {
 
         User loggedUser =
-                (User) session.getAttribute("loggedUser");
+                (User) session.getAttribute(
+                        "loggedUser"
+                );
 
-        if (loggedUser == null) {
+        if(loggedUser == null) {
 
             return "redirect:/login";
         }
 
-        if (!loggedUser.hasPermission(
+        if(!userService.hasPermission(
+                loggedUser,
                 Permission.MANAGE_USERS
         )) {
 
@@ -57,7 +79,20 @@ public class UserController {
 
         model.addAttribute(
                 "users",
-                userService.findAll()
+                userService.findAllFiltered(
+                        sort,
+                        search
+                )
+        );
+
+        model.addAttribute(
+                "sort",
+                sort
+        );
+
+        model.addAttribute(
+                "search",
+                search
         );
 
         model.addAttribute(
@@ -67,27 +102,39 @@ public class UserController {
 
         model.addAttribute(
                 "canEditAdminPermissions",
-                userService.isMainAdmin(loggedUser.getId())
+                userService.isMainAdmin(
+                        loggedUser.getId()
+                )
         );
 
         return "user/list";
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | PROMOVER PARA ADMIN
+    |--------------------------------------------------------------------------
+    */
+
     @PostMapping("/users/make-admin/{id}")
     public String makeAdmin(
+
             @PathVariable Integer id,
+
             HttpSession session
     ) {
 
         User loggedUser =
-                (User) session.getAttribute("loggedUser");
+                (User) session.getAttribute(
+                        "loggedUser"
+                );
 
-        if (loggedUser == null) {
+        if(loggedUser == null) {
 
             return "redirect:/login";
         }
 
-        if (!userService.isMainAdmin(
+        if(!userService.isMainAdmin(
                 loggedUser.getId()
         )) {
 
@@ -99,21 +146,31 @@ public class UserController {
         return "redirect:/users";
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVER ADMIN
+    |--------------------------------------------------------------------------
+    */
+
     @PostMapping("/users/remove-admin/{id}")
     public String removeAdmin(
+
             @PathVariable Integer id,
+
             HttpSession session
     ) {
 
         User loggedUser =
-                (User) session.getAttribute("loggedUser");
+                (User) session.getAttribute(
+                        "loggedUser"
+                );
 
-        if (loggedUser == null) {
+        if(loggedUser == null) {
 
             return "redirect:/login";
         }
 
-        if (!userService.isMainAdmin(
+        if(!userService.isMainAdmin(
                 loggedUser.getId()
         )) {
 
@@ -125,30 +182,47 @@ public class UserController {
         return "redirect:/users";
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ADICIONAR / REMOVER PERMISSÃO
+    |--------------------------------------------------------------------------
+    */
+
     @PostMapping("/users/{id}/permissions/{permission}")
     public String updatePermission(
+
             @PathVariable Integer id,
+
             @PathVariable Permission permission,
-            @RequestParam(defaultValue = "false") boolean enabled,
+
+            @RequestParam(
+                    defaultValue = "false"
+            )
+            boolean enabled,
+
             HttpSession session
     ) {
 
         User loggedUser =
-                (User) session.getAttribute("loggedUser");
+                (User) session.getAttribute(
+                        "loggedUser"
+                );
 
-        if (loggedUser == null) {
+        if(loggedUser == null) {
 
             return "redirect:/login";
         }
 
-        if (!userService.isMainAdmin(
+        if(!userService.isMainAdmin(
                 loggedUser.getId()
         )) {
 
             return "redirect:/home";
         }
 
-        if (!MANAGED_ADMIN_PERMISSIONS.contains(permission)) {
+        if(!MANAGED_ADMIN_PERMISSIONS.contains(
+                permission
+        )) {
 
             return "redirect:/users";
         }
