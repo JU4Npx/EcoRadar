@@ -1,0 +1,3 @@
+com\example\EcoRadar\config\SecurityConfig.class
+com\example\EcoRadar\model\enums\Permission.class
+com\example\EcoRadar\controller\LoggedUserControllerAdvice.class

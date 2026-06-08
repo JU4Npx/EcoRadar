@@ -16,4 +16,6 @@ public interface EventRepository
 
     List<Event>
     findByStartDateAfter(LocalDateTime now);
+    List<Event> findByGreenAreaId(Integer greenAreaId);
+
 }

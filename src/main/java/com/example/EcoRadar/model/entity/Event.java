@@ -1,6 +1,8 @@
 package com.example.EcoRadar.model.entity;
 
 import com.example.EcoRadar.model.enums.EventStatus;
+import com.example.EcoRadar.model.enums.EventCategory;
+
 
 import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,6 +34,9 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     private EventStatus status;
+    @Enumerated(EnumType.STRING)
+    private EventCategory category;
+
 
     @ManyToOne
     @JoinColumn(name = "green_area_id")
@@ -95,4 +100,13 @@ public class Event {
     public void setGreenArea(GreenArea greenArea) {
         this.greenArea = greenArea;
     }
+    public EventCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(EventCategory category) {
+        this.category = category;
+    }
+
 }
+

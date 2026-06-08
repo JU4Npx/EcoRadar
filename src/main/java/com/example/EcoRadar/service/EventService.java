@@ -70,4 +70,8 @@ public class EventService {
 
         repository.deleteById(id);
     }
+    public List<Event> findByGreenAreaId(Integer greenAreaId) {
+        return repository.findByGreenAreaId(greenAreaId);
+    }
+
 }

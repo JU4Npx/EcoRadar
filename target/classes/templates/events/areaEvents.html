@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos da Área Verde</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<main class="container py-4">
+    <div class="card shadow-sm rounded">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Eventos da Área Verde</h4>
+                    <small th:text="${area.name}"></small>
+                </div>
+                <div>
+                    <a th:href="@{/home}" class="btn btn-outline-light"><i class="bi bi-arrow-left"></i> Voltar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">Visualize todos os eventos realizados ou planejados para esta área verde.</p>
+
+            <!-- filtros: pesquisa, status, ordenação -->
+            <form class="row g-2 mb-3" method="get" th:action="@{/areas-verdes/{id}/eventos(id=${area.id})}">
+                <div class="col-md-5">
+                    <input name="search" type="text" class="form-control" placeholder="Pesquisar evento..." th:value="${search}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option th:value="Todos" th:selected="${status == null || status == 'Todos'}">Todos</option>
+                        <option th:each="st : ${statuses}" th:value="${st}" th:text="${st.displayName}" th:selected="${st.name() == status}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="sort" class="form-select">
+                        <option value="recent" th:selected="${sort == null || sort == 'recent'}">Mais recentes primeiro</option>
+                        <option value="oldest" th:selected="${sort == 'oldest'}">Mais antigos primeiro</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button class="btn btn-success">Aplicar</button>
+                </div>
+            </form>
+
+            <!-- Timeline -->
+            <div>
+                <div th:if="${#maps.isEmpty(groupedEvents)}" class="alert alert-info">
+                    <i class="bi bi-calendar-x"></i> Nenhum evento encontrado para esta área verde.
+                </div>
+
+                <div th:each="entry : ${groupedEvents}">
+                    <div class="mb-3">
+                        <div class="badge bg-success mb-3" th:text="${entry.key}">Junho 2026</div>
+
+                        <div th:each="ev : ${entry.value}">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <!-- ícone da categoria -->
+                                            <span th:switch="${ev.category}">
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).TREE_PLANTING}" class="bi bi-tree me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).CLEANUP}" class="bi bi-trash me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).EDUCATION}" class="bi bi-mortarboard me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).LECTURE}" class="bi bi-megaphone me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).FAIR}" class="bi bi-shop me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).SHOW}" class="bi bi-music-note-beamed me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).SPORTS}" class="bi bi-trophy me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).WORKSHOP}" class="bi bi-tools me-2"></i>
+                                                <i th:case="${T(com.example.EcoRadar.model.enums.EventCategory).OTHER}" class="bi bi-calendar-event me-2"></i>
+                                                <i th:case="*" class="bi bi-calendar-event me-2"></i>
+                                            </span>
+
+                                            <strong th:text="${ev.title}">Nome do evento</strong>
+
+                                            <div class="text-muted small mt-2">
+                                                <div><i class="bi bi-geo-alt"></i> <span th:text="${ev.greenArea != null ? ev.greenArea.name : '-'}"></span></div>
+
+                                                <!-- Data de início: checagem de null + formatação segura -->
+                                                <div>
+                                                    <i class="bi bi-calendar"></i>
+                                                    <span th:text="${ev.startDate != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy').format(ev.startDate) : 'Sem data'}"></span>
+                                                    -
+                                                    <span th:text="${ev.startDate != null ? T(java.time.format.DateTimeFormatter).ofPattern('HH:mm').format(ev.startDate) : '--:--'}"></span>
+                                                </div>
+
+                                                <!-- Data de término -->
+                                                <div>
+                                                    <i class="bi bi-clock"></i>
+                                                    Fim:
+                                                    <span th:text="${ev.endDate != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy HH:mm').format(ev.endDate) : '-'}"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <!-- status badge -->
+                                            <span th:switch="${ev.status}">
+                                                <span th:case="${T(com.example.EcoRadar.model.enums.EventStatus).SCHEDULED}" class="badge bg-success">Agendado</span>
+                                                <span th:case="${T(com.example.EcoRadar.model.enums.EventStatus).COMPLETED}" class="badge bg-primary">Concluído</span>
+                                                <span th:case="${T(com.example.EcoRadar.model.enums.EventStatus).CANCELED}" class="badge bg-danger">Cancelado</span>
+                                                <span th:case="*"
+                                                                                                      class="badge bg-secondary" th:text="${ev.status != null ? ev.status.displayName : ev.status}">Status</span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <p class="mt-3" th:text="${ev.description}">Descrição do evento...</p>
+
+                                    <div class="mt-2 text-muted small">
+                                        <div>Criação:
+                                            <span th:text="${ev.startDate != null ? T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy').format(ev.startDate) : '-'}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

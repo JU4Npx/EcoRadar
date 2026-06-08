@@ -1,0 +1,12 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="footer">
+    <footer class="site-footer">
+        <div class="container" >
+            <div>© [[${T(java.time.LocalDate).now().getYear()}]] EcoRadar</div>
+            <div>
+                <a th:href="@{/about}">Sobre</a> ·
+                <a th:href="@{/privacy}">Privacidade</a> ·
+                <a th:href="@{/contact}">Contato</a>
+            </div>
+        </div>
+    </footer>
+</div>
