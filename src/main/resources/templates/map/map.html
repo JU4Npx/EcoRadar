@@ -3,26 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore áreas verdes no mapa do EcoRadar.">
     <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
-    <title>EcoRadar</title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <title>Explorar mapa — EcoRadar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-<div th:replace="fragments/navbar :: navbar"></div>
-<div class="map-fullscreen-wrapper">
-    <div class="position-absolute top-0 start-50 translate-middle-x mt-5 z-3 d-flex justify-content-center w-50">
-        <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar">
-        <button class="btn btn-primary" type="button" id="searchBtn">Buscar</button>
-        <ul id="listaPesquisas" class="list-group position-absolute w-100"></ul>
+<body class="map-body">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="map-fullscreen-wrapper">
+    <div class="map-page-heading">
+        <span><i class="bi bi-compass"></i></span>
+        <div><strong>Explorar áreas verdes</strong><small>Clique nos marcadores para ver mais</small></div>
     </div>
-    <div class="map-fullscreen" id="map"></div>
-</div>
+    <div class="map-search map-search-floating">
+        <i class="bi bi-search"></i>
+        <input type="search" id="searchInput" class="form-control" placeholder="Busque uma praça, parque ou endereço" autocomplete="off" aria-label="Pesquisar no mapa">
+        <button class="btn btn-primary" type="button" id="searchBtn"><span>Buscar</span><i class="bi bi-arrow-right"></i></button>
+        <ul id="listaPesquisas" class="list-group search-results"></ul>
+    </div>
+    <div class="map-filter-bar map-filter-floating" aria-label="Filtros do mapa">
+        <div id="typeFilterGroup" class="map-filter-types" role="group" aria-label="Filtrar por categoria"></div>
+        <label class="distance-filter" for="distanceFilter">
+            <i class="bi bi-signpost-2"></i>
+            <select id="distanceFilter" aria-label="Filtrar por distância" disabled title="Ative sua localização para filtrar por distância">
+                <option value="all">Qualquer distância</option>
+                <option value="2">Até 2 km</option>
+                <option value="5">Até 5 km</option>
+                <option value="10">Até 10 km</option>
+            </select>
+        </label>
+        <span id="mapResultCount" class="map-result-count" aria-live="polite"></span>
+    </div>
+    <div id="locationNotice" class="location-notice location-notice-floating" role="status" hidden>
+        <i class="bi bi-geo-alt"></i>
+        <span>Exibindo Maceió como referência.</span>
+        <button type="button" id="retryLocationBtn">Usar minha localização</button>
+    </div>
+    <div class="map-fullscreen" id="map" aria-label="Mapa de áreas verdes"></div>
+    <aside id="areaDetailDrawer" class="map-detail-drawer" aria-label="Detalhes da área verde" aria-hidden="true">
+        <button type="button" id="closeAreaDetails" class="detail-close" aria-label="Fechar detalhes"><i class="bi bi-x-lg"></i></button>
+        <div id="areaDetails" class="area-details-panel"></div>
+    </aside>
+</main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/map.js"></script>
 </body>
 </html>

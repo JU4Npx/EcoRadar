@@ -28,7 +28,7 @@
 
 <body>
 
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="user-management-page">
 
@@ -477,6 +477,7 @@
     </section>
 
 </main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <script src="/js/user-management.js"></script>
 

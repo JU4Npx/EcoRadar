@@ -1,12 +1,12 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="footer">
     <footer class="site-footer">
-        <div class="container" >
-            <div>© [[${T(java.time.LocalDate).now().getYear()}]] EcoRadar</div>
-            <div>
-                <a th:href="@{/about}">Sobre</a> ·
-                <a th:href="@{/privacy}">Privacidade</a> ·
-                <a th:href="@{/contact}">Contato</a>
-            </div>
+        <div class="container site-footer-inner">
+            <a class="footer-brand" th:href="@{/home}">
+                <img src="/images/EcoRadarLogoSemNome.png" alt="" width="42" height="42">
+                <span><strong>EcoRadar</strong><small>Natureza mais perto.</small></span>
+            </a>
+            <p>Encontre espaços verdes, viva a cidade e cuide do que está ao seu redor.</p>
+            <span class="footer-copy">© [[${T(java.time.LocalDate).now().getYear()}]] EcoRadar</span>
         </div>
     </footer>
 </div>

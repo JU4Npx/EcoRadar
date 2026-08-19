@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 
 @Service
@@ -25,6 +26,8 @@ public class GreenAreaService {
             greenArea.getAddress().setGreenArea(greenArea);
         }
 
+        normalizeVisitInformation(greenArea);
+
         return repository.save(greenArea);
     }
 
@@ -37,6 +40,17 @@ public class GreenAreaService {
                     greenArea.setType(formGreenArea.getType());
                     greenArea.setDescription(formGreenArea.getDescription());
                     greenArea.setStatus(formGreenArea.getStatus());
+                    greenArea.setOpeningHours(formGreenArea.getOpeningHours());
+                    greenArea.setContactPhone(formGreenArea.getContactPhone());
+                    greenArea.setWebsite(formGreenArea.getWebsite());
+                    greenArea.setVisitTips(formGreenArea.getVisitTips());
+                    greenArea.setImageUrl1(formGreenArea.getImageUrl1());
+                    greenArea.setImageUrl2(formGreenArea.getImageUrl2());
+                    greenArea.setImageUrl3(formGreenArea.getImageUrl3());
+                    greenArea.setAmenities(formGreenArea.getAmenities() == null
+                            ? new LinkedHashSet<>()
+                            : new LinkedHashSet<>(formGreenArea.getAmenities()));
+                    normalizeVisitInformation(greenArea);
 
                     GreenAreaAddress formAddress = formGreenArea.getAddress();
                     if (formAddress == null) {
@@ -61,6 +75,30 @@ public class GreenAreaService {
 
                     return repository.save(greenArea);
                 });
+    }
+
+    private void normalizeVisitInformation(GreenArea greenArea) {
+        greenArea.setOpeningHours(cleanText(greenArea.getOpeningHours()));
+        greenArea.setContactPhone(cleanText(greenArea.getContactPhone()));
+        greenArea.setVisitTips(cleanText(greenArea.getVisitTips()));
+        greenArea.setWebsite(cleanWebUrl(greenArea.getWebsite()));
+        greenArea.setImageUrl1(cleanWebUrl(greenArea.getImageUrl1()));
+        greenArea.setImageUrl2(cleanWebUrl(greenArea.getImageUrl2()));
+        greenArea.setImageUrl3(cleanWebUrl(greenArea.getImageUrl3()));
+        if (greenArea.getAmenities() == null) {
+            greenArea.setAmenities(new LinkedHashSet<>());
+        }
+    }
+
+    private String cleanText(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim();
+    }
+
+    private String cleanWebUrl(String value) {
+        String normalized = cleanText(value);
+        if (normalized == null) return null;
+        return normalized.matches("(?i)^https?://.+") ? normalized : null;
     }
 
     public List<GreenArea> findAll() {

@@ -1,267 +1,95 @@
-<nav xmlns:th="http://www.thymeleaf.org"
-     class="navbar navbar-expand-lg bg-body-tertiary"
-     th:fragment="navbar">
+<nav xmlns:th="http://www.thymeleaf.org" class="site-navbar navbar navbar-expand-xl" th:fragment="navbar">
+    <div class="container-fluid site-navbar-inner">
+        <a class="site-brand" th:href="@{/home}" aria-label="EcoRadar - página inicial">
+            <span class="brand-mark">
+                <img src="/images/EcoRadarLogoSemNome.png" alt="" width="54" height="54">
+            </span>
+            <span class="brand-copy">
+                <strong>EcoRadar</strong>
+                <small>Natureza mais perto</small>
+            </span>
+        </a>
 
-    <div class="container-fluid">
-
-        <ul class="navbar-nav d-flex align-items-center me-0 mb-2 mb-lg-0">
-
-            <img src="/images/EcoRadarLogoSemNome.png"
-                 alt="EcoRadar"
-                 width="200"
-                 height="100"
-                 class="me-2">
-
-            <a class="navbar-brand ps-0"
-               href="/home">
-
-                EcoRadar
-
-            </a>
-
-        </ul>
-
-        <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-
+        <button class="navbar-toggler site-nav-toggle" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false"
+                aria-label="Abrir menu de navegação">
             <span class="navbar-toggler-icon"></span>
-
         </button>
 
-        <div class="collapse navbar-collapse"
-             id="navbarSupportedContent">
-
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                <li class="nav-item"
-                    th:if="${session.loggedUser != null}">
-
-                    <a class="nav-link fs-5"
-                       href="/favorites">
-
-                        Favoritos
-
-                    </a>
-
+        <div class="collapse navbar-collapse" id="mainNavigation">
+            <ul class="navbar-nav site-nav-links">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/home}"><i class="bi bi-house-door"></i>Início</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/map}"><i class="bi bi-map"></i>Explorar mapa</a>
+                </li>
+                <li class="nav-item" th:if="${session.loggedUser != null}">
+                    <a class="nav-link" th:href="@{/favorites}"><i class="bi bi-heart"></i>Favoritos</a>
                 </li>
 
-                <li>
-
-                    <a class="nav-link fs-5"
-                       href="/map">
-
-                        Mapa
-
-                    </a>
-
+                <li class="nav-item" th:if="${session.loggedUser != null and session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
+                    <a class="nav-link" th:href="@{/users}"><i class="bi bi-people"></i>Usuários</a>
                 </li>
 
-                <li th:if="${session.loggedUser != null
-                    and session.loggedUser.hasPermission(
-                    T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
-
-                    <a class="nav-link fs-5"
-                       th:href="@{/users}">
-
-                        Gerenciar Usu&aacute;rios
-
+                <li class="nav-item dropdown" th:if="${session.loggedUser != null and (
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA) or
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA) or
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA))}">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-tree"></i>Áreas verdes
                     </a>
-
-                </li>
-
-                <li class="nav-item dropdown"
-                    th:if="${session.loggedUser != null and (
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)
-
-                        or
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)
-
-                        or
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)
-
-                    )}">
-
-                    <a class="nav-link dropdown-toggle fs-5"
-                       href="#"
-                       role="button"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false">
-
-                        &Aacute;reas Verdes
-
-                    </a>
-
-                    <ul class="dropdown-menu">
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/areas-verdes/nova}">
-
-                                Adicionar &Aacute;rea Verde
-
-                            </a>
-
+                    <ul class="dropdown-menu site-dropdown">
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).CREATE_GREEN_AREA)}">
+                            <a class="dropdown-item" th:href="@{/areas-verdes/nova}"><i class="bi bi-plus-circle"></i>Adicionar área</a>
                         </li>
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/areas-verdes/editar}">
-
-                                Editar &Aacute;rea Verde
-
-                            </a>
-
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).EDIT_GREEN_AREA)}">
+                            <a class="dropdown-item" th:href="@{/areas-verdes/editar}"><i class="bi bi-pencil-square"></i>Editar áreas</a>
                         </li>
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/areas-verdes/remover}">
-
-                                Remover &Aacute;rea Verde
-
-                            </a>
-
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).DELETE_GREEN_AREA)}">
+                            <a class="dropdown-item danger-item" th:href="@{/areas-verdes/remover}"><i class="bi bi-trash3"></i>Remover áreas</a>
                         </li>
-
                     </ul>
-
                 </li>
 
-                <li class="nav-item dropdown"
-                    th:if="${session.loggedUser != null and (
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)
-
-                        or
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)
-
-                        or
-
-                        session.loggedUser.hasPermission(
-                        T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)
-
-                    )}">
-
-                    <a class="nav-link dropdown-toggle fs-5"
-                       href="#"
-                       role="button"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false">
-
-                        Eventos
-
+                <li class="nav-item dropdown" th:if="${session.loggedUser != null and (
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT) or
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT) or
+                    session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT))}">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-calendar-event"></i>Eventos
                     </a>
-
-                    <ul class="dropdown-menu">
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/eventos/novo}">
-
-                                Criar Evento
-
-                            </a>
-
+                    <ul class="dropdown-menu site-dropdown">
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).CREATE_EVENT)}">
+                            <a class="dropdown-item" th:href="@{/eventos/novo}"><i class="bi bi-plus-circle"></i>Criar evento</a>
                         </li>
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/eventos/editar}">
-
-                                Editar Evento
-
-                            </a>
-
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).EDIT_EVENT)}">
+                            <a class="dropdown-item" th:href="@{/eventos/editar}"><i class="bi bi-pencil-square"></i>Editar eventos</a>
                         </li>
-
-                        <li th:if="${session.loggedUser != null and session.loggedUser.hasPermission(
-                            T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)}">
-
-                            <a class="dropdown-item"
-                               th:href="@{/eventos/remover}">
-
-                                Remover Evento
-
-                            </a>
-
+                        <li th:if="${session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).DELETE_EVENT)}">
+                            <a class="dropdown-item danger-item" th:href="@{/eventos/remover}"><i class="bi bi-trash3"></i>Remover eventos</a>
                         </li>
-
                     </ul>
-
                 </li>
-
             </ul>
 
+            <div class="site-nav-account">
+                <a th:if="${session.loggedUser == null}" class="btn btn-primary site-account-btn" th:href="@{/login}">
+                    <i class="bi bi-person"></i><span>Entrar</span>
+                </a>
+                <a th:if="${session.loggedUser != null}" class="account-pill" th:href="@{/perfil}">
+                    <span class="account-avatar"
+                          th:text="${#strings.substring((session.loggedUser.name != null and !#strings.isEmpty(session.loggedUser.name)) ? session.loggedUser.name : session.loggedUser.email, 0, 1)}">U</span>
+                    <span class="account-copy">
+                        <small>Olá,</small>
+                        <strong th:text="${session.loggedUser.name}">Usuário</strong>
+                    </span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
         </div>
-
     </div>
-
-    <div class="navbar mb-2 mb-lg-0 me-5">
-
-        <ul class="list-unstyled navbar-nav me-auto mb-1 mb-lg-0">
-
-            <li class="nav-item"
-                th:if="${session.loggedUser == null}">
-
-                <a class="btn btn-outline-success d-flex align-items-center perfil-btn"
-                   th:href="@{/login}">
-
-                    <i class="bi bi-person-circle me-3 perfil-icon"></i>
-
-                    Fazer Login
-
-                </a>
-
-            </li>
-
-            <li class="nav-item"
-                th:if="${session.loggedUser != null}">
-
-                <a class="btn btn-outline-success d-flex align-items-center perfil-btn"
-                   th:href="@{/perfil}">
-
-                    <i class="bi bi-person-circle me-3 perfil-icon"></i>
-
-                    Meu Perfil
-
-                </a>
-
-            </li>
-
-        </ul>
-
-    </div>
-    <!-- Adicione no final de fragments/navbar.html (antes do fechamento </nav>) -->
     <script th:inline="javascript">
-        /*<![CDATA[*/
-        // true se houver usuário na sessão, false caso contrário
         window.LOGGED_USER = [[${session.loggedUser != null}]];
-        /*]]>*/
     </script>
-
-
 </nav>

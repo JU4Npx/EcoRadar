@@ -1,614 +1,668 @@
-/* map.js - versão com botão de favoritar que persiste no banco */
+/* EcoRadar map experience */
+
+const DEFAULT_POSITION = { latitude: -9.6658, longitude: -35.7353 };
+const TYPE_META = {
+    PRACA: { label: 'Praça', icon: 'bi-tree' },
+    PRAIA: { label: 'Praia', icon: 'bi-water' },
+    PARQUE: { label: 'Parque', icon: 'bi-tree-fill' },
+    FEIRA_DE_ARTESANATO: { label: 'Feira', icon: 'bi-shop' },
+    CENTRO_DE_CONVENCOES: { label: 'Convenções', icon: 'bi-building' },
+    MUSEU: { label: 'Museu', icon: 'bi-bank' }
+};
 
 let map;
-let marcacaoAtual;
+let markerLayer;
+let userLocationLayer;
+let temporaryMarker;
 let debounceTimer;
-let favorites = []; // armazenar favoritos globalmente
+let allGreenAreas = [];
+let favorites = [];
+let currentPosition = null;
+let referencePosition = DEFAULT_POSITION;
+let selectedType = 'ALL';
+let maxDistance = Infinity;
+let selectedAreaId = null;
+const areaMarkers = new Map();
 
 const searchInput = document.getElementById('searchInput');
-const listaPesquisas = document.getElementById('listaPesquisas');
-const nearbyContainer = document.getElementById('eventList'); // pode ser null em map.html fullscreen
-const eventDetails = document.getElementById('eventDetails'); // pode ser null em map.html fullscreen
+const searchButton = document.getElementById('searchBtn');
+const searchResults = document.getElementById('listaPesquisas');
+const nearbyContainer = document.getElementById('eventList');
+const nearbySubtitle = document.getElementById('nearbySubtitle');
+const areaDetails = document.getElementById('areaDetails');
+const detailDrawer = document.getElementById('areaDetailDrawer');
+const closeAreaDetails = document.getElementById('closeAreaDetails');
+const typeFilterGroup = document.getElementById('typeFilterGroup');
+const distanceFilter = document.getElementById('distanceFilter');
+const resultCount = document.getElementById('mapResultCount');
+const locationNotice = document.getElementById('locationNotice');
+const retryLocationButton = document.getElementById('retryLocationBtn');
 
-// haversine
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function typeMeta(area) {
+    return TYPE_META[area?.type] || {
+        label: area?.typeLabel || 'Área verde',
+        icon: 'bi-geo-alt-fill'
+    };
+}
+
 function haversineDistance(lat1, lon1, lat2, lon2) {
-    const toRad = v => v * Math.PI / 180;
-    const R = 6371;
+    const toRad = value => value * Math.PI / 180;
+    const earthRadius = 6371;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    const value = Math.sin(dLat / 2) ** 2
+        + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return earthRadius * (2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value)));
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+function formatDistance(distance) {
+    if (!Number.isFinite(distance)) return 'Sem distância';
+    if (distance < 1) return `${Math.max(1, Math.round(distance * 1000))} m`;
+    return `${distance.toFixed(distance < 10 ? 1 : 0).replace('.', ',')} km`;
 }
 
-// Render lista de áreas próximas com botão de favoritar
-function renderNearbyList(userLat, userLon, areas, favorites = []) {
-    // safety: if no nearby container on the page (e.g., map.html), skip DOM list rendering
-    if (!areas || areas.length === 0) {
-        if (nearbyContainer) nearbyContainer.innerHTML = '<div class="nearby-empty text-muted">Nenhuma área verde cadastrada.</div>';
-        return;
+function showToast(message, tone = 'success') {
+    let region = document.querySelector('.eco-toast-region');
+    if (!region) {
+        region = document.createElement('div');
+        region.className = 'eco-toast-region';
+        region.setAttribute('aria-live', 'polite');
+        document.body.appendChild(region);
     }
 
-    // normalizar set de favoritos para comparação rápida
-    const favSet = new Set((favorites || []).map(f => String(f)));
+    const toast = document.createElement('div');
+    toast.className = `eco-toast eco-toast-${tone}`;
+    toast.innerHTML = `<i class="bi ${tone === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'}"></i><span>${escapeHtml(message)}</span>`;
+    region.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => toast.remove(), 220);
+    }, 3200);
+}
 
-    areas.forEach(a => {
-        if (a.latitude != null && a.longitude != null) {
-            a.distanceKm = haversineDistance(userLat, userLon, a.latitude, a.longitude);
-        } else {
-            a.distanceKm = Number.POSITIVE_INFINITY;
-        }
+function initializeMap() {
+    map = L.map('map', { zoomControl: true }).setView(
+        [DEFAULT_POSITION.latitude, DEFAULT_POSITION.longitude],
+        13
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    markerLayer = L.layerGroup().addTo(map);
+    userLocationLayer = L.layerGroup().addTo(map);
+}
+
+function setLoadingState() {
+    if (nearbyContainer) {
+        nearbyContainer.innerHTML = Array.from({ length: 4 }, () => '<div class="map-skeleton"></div>').join('');
+    }
+}
+
+function buildTypeFilters() {
+    if (!typeFilterGroup) return;
+
+    const uniqueTypes = [...new Set(allGreenAreas.map(area => area.type).filter(Boolean))];
+    const buttons = [{ type: 'ALL', label: 'Todos', icon: 'bi-grid' }]
+        .concat(uniqueTypes.map(type => ({ type, ...typeMeta({ type }) })));
+
+    typeFilterGroup.innerHTML = buttons.map(item => `
+        <button type="button" class="map-filter-chip ${item.type === selectedType ? 'active' : ''}"
+                data-filter-type="${escapeHtml(item.type)}" aria-pressed="${item.type === selectedType}">
+            <i class="bi ${escapeHtml(item.icon)}"></i>${escapeHtml(item.label)}
+        </button>
+    `).join('');
+}
+
+function calculateDistances() {
+    allGreenAreas.forEach(area => {
+        const lat = Number(area.latitude);
+        const lon = Number(area.longitude);
+        area.distanceKm = Number.isFinite(lat) && Number.isFinite(lon)
+            ? haversineDistance(referencePosition.latitude, referencePosition.longitude, lat, lon)
+            : Infinity;
     });
+}
 
-    areas.sort((x,y) => x.distanceKm - y.distanceKm);
+function filteredAreas() {
+    return allGreenAreas
+        .filter(area => selectedType === 'ALL' || area.type === selectedType)
+        .filter(area => !Number.isFinite(maxDistance) || area.distanceKm <= maxDistance)
+        .sort((first, second) => first.distanceKm - second.distanceKm);
+}
 
-    if (!nearbyContainer) {
-        // nothing to render in DOM (page without sidebar). caller may still add markers.
+function markerIcon(area) {
+    const meta = typeMeta(area);
+    const typeClass = String(area.type || 'area').toLowerCase().replace(/_/g, '-');
+    return L.divIcon({
+        className: 'eco-marker-shell',
+        html: `<span class="eco-map-marker eco-marker-${escapeHtml(typeClass)}"><i class="bi ${escapeHtml(meta.icon)}"></i></span>`,
+        iconSize: [38, 44],
+        iconAnchor: [19, 42],
+        popupAnchor: [0, -38]
+    });
+}
+
+function favoriteButton(areaId, extraClass = '') {
+    const active = favorites.map(String).includes(String(areaId));
+    return `
+        <button type="button" class="btn btn-sm ${active ? 'btn-success active' : 'btn-outline-success'} ${extraClass}"
+                data-favorite-area="${areaId}" aria-label="${active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}"
+                title="${active ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
+            <i class="bi ${active ? 'bi-heart-fill' : 'bi-heart'}"></i>
+        </button>
+    `;
+}
+
+function popupContent(area) {
+    const meta = typeMeta(area);
+    return `
+        <div class="area-popup">
+            <span class="area-type-badge"><i class="bi ${escapeHtml(meta.icon)}"></i>${escapeHtml(meta.label)}</span>
+            <h3>${escapeHtml(area.name || 'Área verde')}</h3>
+            <p><i class="bi bi-geo-alt"></i>${escapeHtml(area.address || 'Endereço não informado')}</p>
+            <div class="area-popup-actions">
+                <button type="button" class="btn btn-sm btn-primary" data-show-area="${area.id}">Ver detalhes</button>
+                ${favoriteButton(area.id, 'popup-fav')}
+            </div>
+        </div>
+    `;
+}
+
+function renderMarkers(areas) {
+    markerLayer.clearLayers();
+    areaMarkers.clear();
+
+    areas.forEach(area => {
+        const lat = Number(area.latitude);
+        const lon = Number(area.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        const marker = L.marker([lat, lon], { icon: markerIcon(area), title: area.name || 'Área verde' })
+            .bindPopup(popupContent(area), { maxWidth: 310 })
+            .on('click', () => selectArea(area, false))
+            .addTo(markerLayer);
+        areaMarkers.set(String(area.id), marker);
+    });
+}
+
+function renderNearbyList(areas) {
+    if (!nearbyContainer) return;
+
+    if (!areas.length) {
+        nearbyContainer.innerHTML = `
+            <div class="panel-empty compact-empty">
+                <i class="bi bi-search"></i>
+                <p>Nenhum local combina com estes filtros.</p>
+                <button type="button" class="btn btn-sm btn-outline-success" data-clear-filters>Limpar filtros</button>
+            </div>`;
         return;
     }
 
-    nearbyContainer.innerHTML = '';
+    nearbyContainer.innerHTML = areas.map(area => {
+        const meta = typeMeta(area);
+        return `
+            <article class="nearby-item ${String(area.id) === String(selectedAreaId) ? 'active' : ''}" data-nearby-area="${area.id}" tabindex="0">
+                <div class="nearby-item-top">
+                    <span class="nearby-type-icon"><i class="bi ${escapeHtml(meta.icon)}"></i></span>
+                    <div class="nearby-info">
+                        <span class="nearby-kind">${escapeHtml(meta.label)}</span>
+                        <div class="nearby-title">${escapeHtml(area.name || 'Área verde')}</div>
+                        <div class="nearby-sub">${escapeHtml(area.address || area.description || 'Sem endereço informado')}</div>
+                    </div>
+                    <span class="distance-badge">${formatDistance(area.distanceKm)}</span>
+                </div>
+                <div class="nearby-item-actions">
+                    <span>Ver detalhes <i class="bi bi-arrow-right"></i></span>
+                    ${favoriteButton(area.id, 'favorite-btn')}
+                </div>
+            </article>`;
+    }).join('');
 
-    // Render all areas (ordenadas por proximidade) — permite scroll no painel
-    for (const a of areas) {
-        const item = document.createElement('div');
-        item.className = 'nearby-item';
-
-        const infoHtml = `
-            <div class="nearby-info">
-                <div class="nearby-title">${escapeHtml(a.name || '—')}</div>
-                <div class="nearby-sub">${escapeHtml(a.address || (a.description || '').substring(0,80))}</div>
-            </div>
-        `;
-
-        const distHtml = `<div class="distance-badge">${a.distanceKm === Infinity ? '-' : (a.distanceKm < 1 ? (a.distanceKm*1000|0)+' m' : a.distanceKm.toFixed(2)+' km')}</div>`;
-
-        const isFav = favSet.has(String(a.id));
-        const btnClass = isFav ? 'btn-success active' : 'btn-outline-success';
-        const iconClass = isFav ? 'bi bi-heart-fill' : 'bi bi-heart';
-        const titleText = isFav ? 'Remover de favoritos' : 'Favoritar';
-
-        const favHtml = `
-            <div class="nearby-fav mt-2">
-                <button class="btn btn-sm ${btnClass} favorite-btn" data-area-id="${a.id}" title="${titleText}">
-                    <i class="${iconClass}"></i>
-                </button>
-            </div>
-        `;
-
-        item.innerHTML = `<div class="d-flex align-items-start justify-content-between">${infoHtml}${distHtml}</div>${favHtml}`;
-
-        item.addEventListener('click', (e) => {
-            if (!e.target.closest('.favorite-btn')) {
-                focusOnArea(a);
+    nearbyContainer.querySelectorAll('[data-nearby-area]').forEach(item => {
+        const openArea = () => {
+            const area = allGreenAreas.find(candidate => String(candidate.id) === item.dataset.nearbyArea);
+            if (area) selectArea(area);
+        };
+        item.addEventListener('click', event => {
+            if (!event.target.closest('[data-favorite-area]')) openArea();
+        });
+        item.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openArea();
             }
         });
+    });
+}
 
-        nearbyContainer.appendChild(item);
+function applyFilters() {
+    calculateDistances();
+    const areas = filteredAreas();
+    renderMarkers(areas);
+    renderNearbyList(areas);
 
-        const btn = item.querySelector('.favorite-btn');
-        if (btn) {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                handleFavoriteClick(btn, a.id);
-            });
-        }
+    if (resultCount) {
+        resultCount.textContent = `${areas.length} ${areas.length === 1 ? 'local' : 'locais'}`;
     }
 }
 
-// Lida com clique no botão favoritar
-async function handleFavoriteClick(btn, areaId) {
+function directionsUrl(area) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${area.latitude},${area.longitude}`)}`;
+}
+
+function selectArea(area, moveMap = true) {
+    if (!area) return;
+    const lat = Number(area.latitude);
+    const lon = Number(area.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        showToast('A localização deste espaço ainda não está disponível.', 'error');
+        return;
+    }
+
+    selectedAreaId = area.id;
+    if (moveMap) map.flyTo([lat, lon], 16, { duration: .7 });
+    const marker = areaMarkers.get(String(area.id));
+    if (marker) marker.openPopup();
+    renderNearbyList(filteredAreas());
+    renderAreaDetails(area);
+}
+
+function renderAreaDetails(area) {
+    if (!areaDetails) return;
+    const meta = typeMeta(area);
+    const isFavorite = favorites.map(String).includes(String(area.id));
+
+    areaDetails.innerHTML = `
+        <div class="area-detail-hero ${area.primaryPhotoUrl ? 'has-photo' : ''}">
+            ${area.primaryPhotoUrl ? `<img src="${escapeHtml(area.primaryPhotoUrl)}" alt="Foto de ${escapeHtml(area.name || 'área verde')}" loading="lazy">` : ''}
+            <span class="area-detail-icon"><i class="bi ${escapeHtml(meta.icon)}"></i></span>
+            <span class="area-type-badge">${escapeHtml(meta.label)}</span>
+        </div>
+        <div class="area-detail-copy">
+            <h2>${escapeHtml(area.name || 'Área verde')}</h2>
+            <p class="area-detail-address"><i class="bi bi-geo-alt"></i>${escapeHtml(area.address || 'Endereço não informado')}</p>
+            <p class="area-detail-description">${escapeHtml(area.description || 'Este espaço ainda não possui uma descrição detalhada.')}</p>
+            ${area.openingHours ? `<div class="area-detail-hours"><i class="bi bi-clock"></i><span><small>Funcionamento</small><strong>${escapeHtml(area.openingHours)}</strong></span></div>` : ''}
+            ${Array.isArray(area.amenities) && area.amenities.length ? `<div class="area-detail-amenities">${area.amenities.slice(0, 4).map(amenity => `<span><i class="bi ${escapeHtml(amenity.icon)}"></i>${escapeHtml(amenity.label)}</span>`).join('')}</div>` : ''}
+            <div class="area-detail-actions">
+                <a class="btn btn-primary btn-sm" href="${directionsUrl(area)}" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-sign-turn-right"></i>Como chegar
+                </a>
+                <button type="button" class="btn btn-outline-success btn-sm" data-share-area="${area.id}">
+                    <i class="bi bi-share"></i>Compartilhar
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm detail-favorite ${isFavorite ? 'active' : ''}" data-favorite-area="${area.id}">
+                    <i class="bi ${isFavorite ? 'bi-heart-fill' : 'bi-heart'}"></i><span>${isFavorite ? 'Salvo' : 'Salvar'}</span>
+                </button>
+                <a class="btn btn-quiet btn-sm area-full-page-link" href="/areas-verdes/${area.id}"><i class="bi bi-arrow-up-right-square"></i>Página completa</a>
+            </div>
+            <section class="area-events-section">
+                <div class="area-events-heading"><span><i class="bi bi-calendar-event"></i>Agenda verde</span><small>Próximos eventos</small></div>
+                <div id="eventDetails" class="event-details-list"><div class="map-skeleton"></div><div class="map-skeleton small"></div></div>
+            </section>
+        </div>`;
+
+    if (detailDrawer) {
+        detailDrawer.classList.add('is-open');
+        detailDrawer.setAttribute('aria-hidden', 'false');
+    }
+    loadAreaEvents(area.id);
+}
+
+async function loadAreaEvents(areaId) {
+    const container = document.getElementById('eventDetails');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`/api/green-areas/${areaId}/events`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const events = await response.json();
+
+        if (!events.length) {
+            container.innerHTML = '<div class="event-empty"><i class="bi bi-calendar2-heart"></i><span>Nenhum evento próximo neste local.</span></div>';
+            return;
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        });
+
+        container.innerHTML = events.map(event => {
+            const start = event.startDate ? dateFormatter.format(new Date(event.startDate)) : 'Data a confirmar';
+            return `
+                <details class="event-card">
+                    <summary>
+                        <span class="event-date-icon"><i class="bi bi-calendar3"></i></span>
+                        <span><strong>${escapeHtml(event.title || 'Evento')}</strong><small>${escapeHtml(start)}</small></span>
+                        <i class="bi bi-chevron-down"></i>
+                    </summary>
+                    <p>${escapeHtml(event.description || 'Sem descrição adicional.')}</p>
+                </details>`;
+        }).join('');
+    } catch (error) {
+        console.error('Erro ao carregar eventos:', error);
+        container.innerHTML = '<div class="event-empty error"><i class="bi bi-exclamation-circle"></i><span>Não foi possível carregar a agenda.</span></div>';
+    }
+}
+
+function syncFavoriteButtons(areaId) {
+    const active = favorites.map(String).includes(String(areaId));
+    document.querySelectorAll(`[data-favorite-area="${CSS.escape(String(areaId))}"]`).forEach(button => {
+        button.classList.toggle('active', active);
+        button.classList.toggle('btn-success', active);
+        button.classList.toggle('btn-outline-success', !active);
+        button.title = active ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+        button.setAttribute('aria-label', button.title);
+        const icon = button.querySelector('i');
+        if (icon) icon.className = `bi ${active ? 'bi-heart-fill' : 'bi-heart'}`;
+        const label = button.querySelector('span');
+        if (label) label.textContent = active ? 'Salvo' : 'Salvar';
+    });
+}
+
+async function toggleFavorite(areaId) {
     if (!window.LOGGED_USER) {
         window.location.href = '/login';
         return;
     }
 
+    const active = favorites.map(String).includes(String(areaId));
     try {
-        // Verificar status atual
-        const statusResp = await fetch(`/api/favorites/status/${areaId}`);
-        const statusData = await statusResp.json();
-
-        if (statusData.isFavorite) {
-            // Remover favorito
-            const resp = await fetch(`/api/favorites/${areaId}`, { method: 'DELETE' });
-            if (resp.ok) {
-                btn.classList.remove('active');
-                btn.innerHTML = '<i class="bi bi-heart"></i>';
-                btn.title = 'Favoritar';
-            } else {
-                alert('Erro ao remover favorito');
-            }
-        } else {
-            // Adicionar favorito
-            const resp = await fetch(`/api/favorites/${areaId}`, { method: 'POST' });
-            if (resp.ok) {
-                btn.classList.add('active');
-                btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
-                btn.title = 'Remover de favoritos';
-            } else {
-                alert('Erro ao adicionar favorito');
-            }
-        }
-    } catch (e) {
-        console.error('Erro ao processar favorito:', e);
-        alert('Erro ao processar favorito');
+        const response = await fetch(`/api/favorites/${areaId}`, { method: active ? 'DELETE' : 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        favorites = active
+            ? favorites.filter(id => String(id) !== String(areaId))
+            : [...favorites, Number(areaId)];
+        syncFavoriteButtons(areaId);
+        showToast(active ? 'Local removido dos favoritos.' : 'Local salvo nos favoritos!');
+    } catch (error) {
+        console.error('Erro ao atualizar favorito:', error);
+        showToast('Não foi possível atualizar seus favoritos.', 'error');
     }
 }
 
-// focusOnArea e populateEventPanel (mantém comportamento anterior)
-async function focusOnArea(area) {
-    if (!map || !area) return;
+async function shareArea(area) {
+    const shareUrl = `${window.location.origin}/areas-verdes/${encodeURIComponent(area.id)}`;
+    const shareData = {
+        title: `${area.name} — EcoRadar`,
+        text: `Conheça ${area.name} no EcoRadar.`,
+        url: shareUrl
+    };
 
-    const lat = parseFloat(area.latitude);
-    const lon = parseFloat(area.longitude);
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(shareUrl);
+            showToast('Link copiado para a área de transferência!');
+        } else {
+            showToast('Copie o endereço desta página para compartilhar.', 'error');
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') showToast('Não foi possível compartilhar agora.', 'error');
+    }
+}
 
-    if (isNaN(lat) || isNaN(lon)) {
-        alert('Localização da área não disponível.');
+function setUserLocation(position) {
+    currentPosition = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+    referencePosition = currentPosition;
+    userLocationLayer.clearLayers();
+
+    L.circleMarker([currentPosition.latitude, currentPosition.longitude], {
+        radius: 8, color: '#ffffff', weight: 3, fillColor: '#176b49', fillOpacity: 1
+    }).bindPopup('Sua localização').addTo(userLocationLayer);
+
+    L.circle([currentPosition.latitude, currentPosition.longitude], {
+        radius: Math.min(position.coords.accuracy || 0, 1500),
+        color: '#176b49', weight: 1, fillColor: '#69bd83', fillOpacity: .1
+    }).addTo(userLocationLayer);
+
+    if (distanceFilter) distanceFilter.disabled = false;
+    if (nearbySubtitle) nearbySubtitle.textContent = 'Ordenadas pela sua distância';
+    if (locationNotice) locationNotice.hidden = true;
+    map.flyTo([currentPosition.latitude, currentPosition.longitude], 14, { duration: .8 });
+    applyFilters();
+}
+
+function showLocationFallback() {
+    currentPosition = null;
+    referencePosition = DEFAULT_POSITION;
+    maxDistance = Infinity;
+    if (distanceFilter) {
+        distanceFilter.value = 'all';
+        distanceFilter.disabled = true;
+        distanceFilter.title = 'Ative sua localização para filtrar por distância';
+    }
+    if (nearbySubtitle) nearbySubtitle.textContent = 'A partir do centro de Maceió';
+    if (locationNotice) locationNotice.hidden = false;
+    applyFilters();
+}
+
+function requestUserLocation(fromButton = false) {
+    if (!navigator.geolocation) {
+        showLocationFallback();
         return;
     }
 
-    if (marcacaoAtual) {
-        map.removeLayer(marcacaoAtual);
-    }
+    if (fromButton && retryLocationButton) retryLocationButton.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            if (retryLocationButton) retryLocationButton.disabled = false;
+            setUserLocation(position);
+            if (fromButton) showToast('Localização atualizada!');
+        },
+        error => {
+            console.info('Localização indisponível:', error.message);
+            if (retryLocationButton) retryLocationButton.disabled = false;
+            showLocationFallback();
+            if (fromButton) showToast('Autorize a localização no navegador para usar este recurso.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 }
+    );
+}
 
-    marcacaoAtual = L.marker([lat, lon]).addTo(map);
+async function loadMapData() {
+    setLoadingState();
+    try {
+        const requests = [fetch('/api/green-areas')];
+        if (window.LOGGED_USER) requests.push(fetch('/api/favorites'));
+        const responses = await Promise.all(requests);
+        if (!responses[0].ok) throw new Error(`HTTP ${responses[0].status}`);
 
-    const popupHtml =
-        `<div style="max-width:300px; text-align:left">
-            <h6 style="margin:0 0 6px 0">${escapeHtml(area.name || 'Área verde')}</h6>
-            <div style="font-size:0.95rem;color:#5b6b59">${escapeHtml(area.address || area.description || '')}</div>
-         </div>`;
+        allGreenAreas = await responses[0].json();
+        if (responses[1]?.ok) favorites = await responses[1].json();
+        buildTypeFilters();
+        applyFilters();
 
-    const popup = L.popup({
-        maxWidth: 320,
-        offset: L.point(0, -10),
-        autoPan: true,
-        autoPanPaddingTopLeft: [0, 120],
-        autoPanPadding: [10, 10]
-    }).setLatLng([lat, lon])
-        .setContent(popupHtml)
-        .openOn(map);
-
-    map.setView([lat, lon], 16);
-
-    // Only populate event panel if it exists (not in fullscreen map)
-    if (eventDetails) {
-        populateEventPanel(area.id);
+        const requestedId = new URLSearchParams(window.location.search).get('area');
+        const requestedArea = allGreenAreas.find(area => String(area.id) === String(requestedId));
+        if (requestedArea) window.setTimeout(() => selectArea(requestedArea), 250);
+    } catch (error) {
+        console.error('Erro ao carregar áreas verdes:', error);
+        if (nearbyContainer) {
+            nearbyContainer.innerHTML = '<div class="panel-empty"><i class="bi bi-wifi-off"></i><p>Não foi possível carregar os locais agora.</p></div>';
+        }
+        showToast('Não foi possível carregar as áreas verdes.', 'error');
     }
 }
 
-async function populateEventPanel(areaId) {
-    if (!eventDetails) return;
-    
-    eventDetails.innerHTML = '<div>Carregando eventos...</div>';
-    try {
-        const resp = await fetch(`/api/green-areas/${areaId}/events`);
-        if (!resp.ok) {
-            eventDetails.innerHTML = '<div class="text-danger">Erro ao carregar eventos.</div>';
-            return;
-        }
-        const events = await resp.json();
-        if (!events || events.length === 0) {
-            eventDetails.innerHTML = '<div class="alert alert-info mb-0">Nenhum evento em andamento ou próximo.</div>';
-            return;
-        }
-
-        const dtf = new Intl.DateTimeFormat('pt-BR', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-
-        const listHtml = events.map((ev, idx) => {
-            const start = ev.startDate ? new Date(ev.startDate) : null;
-            const end = ev.endDate ? new Date(ev.endDate) : null;
-            const startStr = start ? dtf.format(start) : '-';
-            const endStr = end ? dtf.format(end) : '-';
-
-            return `
-                <div class="event-card mb-3" data-ev-index="${idx}">
-                    <div class="event-card-body">
-                        <div class="event-card-title"><strong>${escapeHtml(ev.title)}</strong></div>
-                        <div class="event-card-datetime text-muted" style="font-size:0.95rem;margin-top:6px">
-                            <div>Início: ${escapeHtml(startStr)}</div>
-                            <div>Fim: ${escapeHtml(endStr)}</div>
-                        </div>
-                        <div class="event-desc mt-2" style="display:none; font-size:0.95rem; color:#333;">
-                            ${escapeHtml(ev.description || '')}
-                        </div>
-                        <button class="btn btn-sm btn-eco view-details-btn" data-ev="${idx}">Ver detalhes</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        eventDetails.innerHTML = listHtml;
-
-        eventDetails.querySelectorAll('.view-details-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const container = btn.closest('.event-card');
-                const desc = container.querySelector('.event-desc');
-                if (desc.style.display === 'none' || !desc.style.display) {
-                    desc.style.display = 'block';
-                    btn.textContent = 'Ocultar detalhes';
-                } else {
-                    desc.style.display = 'none';
-                    btn.textContent = 'Ver detalhes';
-                }
-            });
-        });
-
-    } catch (e) {
-        console.error('Erro ao carregar eventos', e);
-        if (eventDetails) {
-            eventDetails.innerHTML = '<div class="text-danger">Erro ao carregar eventos.</div>';
-        }
-    }
+function clearFilters() {
+    selectedType = 'ALL';
+    maxDistance = Infinity;
+    if (distanceFilter) distanceFilter.value = 'all';
+    buildTypeFilters();
+    applyFilters();
 }
 
-// Inicialização do mapa
-navigator.geolocation.getCurrentPosition(
-    async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
+async function searchPlaces(query) {
+    if (!query) return [];
+    const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=5&accept-language=pt-BR&q=${encodeURIComponent(query)}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+}
 
-        map = L.map('map').setView([latitude, longitude], 15);
+function selectExternalPlace(place) {
+    const lat = Number(place.lat);
+    const lon = Number(place.lon);
+    if (temporaryMarker) map.removeLayer(temporaryMarker);
+    temporaryMarker = L.marker([lat, lon]).addTo(map).bindPopup(escapeHtml(place.display_name)).openPopup();
+    map.flyTo([lat, lon], 16, { duration: .7 });
+    searchInput.value = place.display_name;
+    searchResults.innerHTML = '';
+}
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        L.marker([latitude, longitude])
-            .addTo(map)
-            .bindPopup("Minha localização")
-            .openPopup();
-
-        L.circle([latitude, longitude], {
-            radius: accuracy
-        }).addTo(map);
-
-        try {
-            const resp = await fetch('/api/green-areas');
-            if (resp.ok) {
-                const areas = await resp.json();
-                allGreenAreas = areas; // armazenar globalmente para busca
-
-                // Buscar favoritos do usuário para já marcar os botões
-                try {
-                    const favResp = await fetch('/api/favorites');
-                    if (favResp.ok) {
-                        favorites = await favResp.json();
-                    }
-                } catch (fe) {
-                    console.error('Erro ao buscar favoritos', fe);
-                }
-
-                renderNearbyList(latitude, longitude, areas, favorites);
-
-                // preparar set rápido de favoritos para ajustar popups
-                const favSetMain = new Set((favorites || []).map(f => String(f)));
-
-                areas.forEach(a => {
-                    if (a.latitude != null && a.longitude != null) {
-                        const marker = L.circleMarker([a.latitude, a.longitude], {
-                            radius: 6,
-                            color: '#198754',
-                            fillColor: '#66BB6A',
-                            fillOpacity: 0.9
-                        }).addTo(map);
-                        marker.on('click', () => focusOnArea(a));
-
-                        // popup com botão de favoritar
-                        const isFav = favSetMain.has(String(a.id));
-                        const favBtnHtml = `<button class="btn btn-sm ${isFav ? 'btn-success active' : 'btn-outline-success'} popup-fav" data-area-id="${a.id}" title="${isFav ? 'Remover de favoritos' : 'Favoritar'}"><i class="${isFav ? 'bi bi-heart-fill' : 'bi bi-heart'}"></i></button>`;
-                        const popupHtml = `<div style="max-width:300px; text-align:left"><h6 style="margin:0 0 6px 0">${escapeHtml(a.name || 'Área verde')}</h6><div style="font-size:0.95rem;color:#5b6b59">${escapeHtml(a.address || a.description || '')}</div><div class="mt-2">${favBtnHtml}</div></div>`;
-
-                        marker.bindPopup(popupHtml);
-
-                        marker.on('popupopen', function(e){
-                            try {
-                                const popupEl = e.popup.getElement();
-                                const btn = popupEl.querySelector('.popup-fav');
-                                if (btn) {
-                                    btn.addEventListener('click', function(ev){
-                                        ev.stopPropagation();
-                                        handleFavoriteClick(btn, a.id);
-                                    });
-                                }
-                            } catch (err) {
-                                console.error('Erro ao anexar listener de favorito no popup', err);
-                            }
-                        });
-                    }
-                });
-            } else {
-                if (nearbyContainer) {
-                    nearbyContainer.innerHTML = '<div class="nearby-empty text-danger">Erro ao carregar áreas.</div>';
-                }
-            }
-        } catch (e) {
-            console.error('Erro ao buscar áreas verdes', e);
-            if (nearbyContainer) {
-                nearbyContainer.innerHTML = '<div class="nearby-empty text-danger">Erro ao carregar áreas.</div>';
-            }
-        }
-
-    },
-    (error) => {
-        console.error("Erro ao obter localização:", error);
-        // não alertar automaticamente para melhor UX — deixar mapa carregando
-        // alert("Não foi possível obter sua localização. Você ainda pode usar o campo de busca.");
-
-        const defaultLat = -9.6658;
-        const defaultLon = -35.7353;
-
-        map = L.map('map').setView([defaultLat, defaultLon], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // buscar áreas mesmo sem geolocalização para popular o mapa e a lista
-        (async function(){
-            try {
-                const resp = await fetch('/api/green-areas');
-                if (resp.ok) {
-                    const areas = await resp.json();
-                    allGreenAreas = areas; // armazenar globalmente para busca
-
-                    // calcular distâncias usando ponto padrão
-                    areas.forEach(a => {
-                        if (a.latitude != null && a.longitude != null) {
-                            a.distanceKm = haversineDistance(defaultLat, defaultLon, a.latitude, a.longitude);
-                        } else {
-                            a.distanceKm = Number.POSITIVE_INFINITY;
-                        }
-                    });
-
-                    // ordenar por proximidade
-                    areas.sort((x,y) => x.distanceKm - y.distanceKm);
-
-                    // tentar obter favoritos (silencioso)
-                    try {
-                        const favResp = await fetch('/api/favorites');
-                        if (favResp.ok) favorites = await favResp.json();
-                    } catch (fe) { console.error('Erro ao buscar favoritos', fe); }
-
-                    // renderizar lista e marcadores
-                    renderNearbyList(defaultLat, defaultLon, areas, favorites);
-
-                    // preparar set rápido de favoritos para ajustar popups
-                    const favSetFallback = new Set((favorites || []).map(f => String(f)));
-
-                    areas.forEach(a => {
-                        if (a.latitude != null && a.longitude != null) {
-                            const marker = L.circleMarker([a.latitude, a.longitude], {
-                                radius: 6,
-                                color: '#198754',
-                                fillColor: '#66BB6A',
-                                fillOpacity: 0.9
-                            }).addTo(map);
-                            marker.on('click', () => focusOnArea(a));
-
-                            const isFav = favSetFallback.has(String(a.id));
-                            const favBtnHtml = `<button class="btn btn-sm ${isFav ? 'btn-success active' : 'btn-outline-success'} popup-fav" data-area-id="${a.id}" title="${isFav ? 'Remover de favoritos' : 'Favoritar'}"><i class="${isFav ? 'bi bi-heart-fill' : 'bi bi-heart'}"></i></button>`;
-                            const popupHtml = `<div style="max-width:300px; text-align:left"><h6 style="margin:0 0 6px 0">${escapeHtml(a.name || 'Área verde')}</h6><div style="font-size:0.95rem;color:#5b6b59">${escapeHtml(a.address || a.description || '')}</div><div class="mt-2">${favBtnHtml}</div></div>`;
-
-                            marker.bindPopup(popupHtml);
-
-                            marker.on('popupopen', function(e){
-                                try {
-                                    const popupEl = e.popup.getElement();
-                                    const btn = popupEl.querySelector('.popup-fav');
-                                    if (btn) {
-                                        btn.addEventListener('click', function(ev){
-                                            ev.stopPropagation();
-                                            handleFavoriteClick(btn, a.id);
-                                        });
-                                    }
-                                } catch (err) {
-                                    console.error('Erro ao anexar listener de favorito no popup', err);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    if (nearbyContainer) {
-                        nearbyContainer.innerHTML = '<div class="nearby-empty text-danger">Erro ao carregar áreas.</div>';
-                    }
-                }
-            } catch (e) {
-                console.error('Erro ao buscar áreas verdes', e);
-                if (nearbyContainer) {
-                    nearbyContainer.innerHTML = '<div class="nearby-empty text-danger">Erro ao carregar áreas.</div>';
-                }
-            }
-        })();
-    },
-    {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    }
-);
-
-// Buscar / autocomplete / enter (mantido + adição de áreas verdes)
-let allGreenAreas = []; // armazenar áreas verdes globalmente para filtro
-
-async function buscarSugestoes(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
+async function renderSearchSuggestions(query) {
     try {
-        const response = await fetch(url);
+        const normalized = query.toLocaleLowerCase('pt-BR');
+        const localAreas = allGreenAreas.filter(area =>
+            area.name?.toLocaleLowerCase('pt-BR').includes(normalized)
+            || area.address?.toLocaleLowerCase('pt-BR').includes(normalized)
+        ).slice(0, 5);
+        const places = await searchPlaces(query);
 
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
+        searchResults.innerHTML = [
+            ...localAreas.map(area => {
+                const meta = typeMeta(area);
+                return `<li class="list-group-item search-area-result" data-search-area="${area.id}"><i class="bi ${escapeHtml(meta.icon)}"></i><span><strong>${escapeHtml(area.name)}</strong><small>${escapeHtml(area.address || meta.label)}</small></span></li>`;
+            }),
+            ...(localAreas.length && places.length ? ['<li class="list-group-item search-separator">Outros endereços</li>'] : []),
+            ...places.map((place, index) => `<li class="list-group-item search-place-result" data-place-index="${index}"><i class="bi bi-geo-alt"></i><span>${escapeHtml(place.display_name)}</span></li>`)
+        ].join('');
 
-        const results = await response.json();
-
-        listaPesquisas.innerHTML = '';
-
-        // Filtrar áreas verdes por nome/endereço
-        const queryLower = query.toLowerCase();
-        const matchingAreas = allGreenAreas.filter(a => 
-            (a.name && a.name.toLowerCase().includes(queryLower)) ||
-            (a.address && a.address.toLowerCase().includes(queryLower))
-        );
-
-        // Adicionar áreas verdes primeiro (destacadas em verde)
-        matchingAreas.forEach(area => {
-            const item = document.createElement('li');
-            item.innerHTML = `<strong style="color: #198754;">📍 ${escapeHtml(area.name)}</strong><br><small style="color: #666;">${escapeHtml(area.address || '')}</small>`;
-            item.classList.add('list-group-item', 'list-group-item-action');
-            item.style.backgroundColor = '#f0fff0';
-            item.style.borderLeft = '4px solid #198754';
-            item.style.cursor = 'pointer';
+        searchResults.querySelectorAll('[data-search-area]').forEach(item => {
             item.addEventListener('click', () => {
-                const lat = parseFloat(area.latitude);
-                const lon = parseFloat(area.longitude);
-
-                if (marcacaoAtual) {
-                    map.removeLayer(marcacaoAtual);
+                const area = allGreenAreas.find(candidate => String(candidate.id) === item.dataset.searchArea);
+                if (area) {
+                    selectArea(area);
+                    searchInput.value = area.name;
+                    searchResults.innerHTML = '';
                 }
-
-                const isFav = new Set((favorites || []).map(f => String(f))).has(String(area.id));
-                const favBtnHtml = `<button class="btn btn-sm ${isFav ? 'btn-success active' : 'btn-outline-success'} popup-fav" data-area-id="${area.id}" title="${isFav ? 'Remover de favoritos' : 'Favoritar'}"><i class="${isFav ? 'bi bi-heart-fill' : 'bi bi-heart'}"></i></button>`;
-                const popupHtml = `<div style="max-width:300px; text-align:left"><h6 style="margin:0 0 6px 0">${escapeHtml(area.name || 'Área verde')}</h6><div style="font-size:0.95rem;color:#5b6b59">${escapeHtml(area.address || area.description || '')}</div><div class="mt-2">${favBtnHtml}</div></div>`;
-
-                marcacaoAtual = L.marker([lat, lon])
-                    .addTo(map)
-                    .bindPopup(popupHtml)
-                    .openPopup();
-
-                // Anexar listener de favoritar ao popup
-                marcacaoAtual.on('popupopen', function(e){
-                    try {
-                        const popupEl = e.popup.getElement();
-                        const btn = popupEl.querySelector('.popup-fav');
-                        if (btn) {
-                            btn.addEventListener('click', function(ev){
-                                ev.stopPropagation();
-                                handleFavoriteClick(btn, area.id);
-                            });
-                        }
-                    } catch (err) {
-                        console.error('Erro ao anexar listener de favorito no popup', err);
-                    }
-                });
-
-                map.setView([lat, lon], 16);
-
-                listaPesquisas.innerHTML = '';
-                searchInput.value = area.name;
             });
-
-            listaPesquisas.appendChild(item);
         });
-
-        // Adicionar separador se houver ambos
-        if (matchingAreas.length > 0 && results.length > 0) {
-            const separator = document.createElement('li');
-            separator.classList.add('list-group-item');
-            separator.style.textAlign = 'center';
-            separator.style.color = '#999';
-            separator.style.fontSize = '0.9rem';
-            separator.textContent = '— Outros locais —';
-            separator.style.pointerEvents = 'none';
-            listaPesquisas.appendChild(separator);
-        }
-
-        // Adicionar resultados do OpenStreetMap
-        results.forEach(r => {
-            const item = document.createElement('li');
-            item.textContent = r.display_name;
-            item.classList.add('list-group-item','list-group-item-action');
-            item.addEventListener('click', () => {
-                const lat = parseFloat(r.lat);
-                const lon = parseFloat(r.lon);
-
-                if (marcacaoAtual) {
-                    map.removeLayer(marcacaoAtual);
-                }
-
-                marcacaoAtual = L.marker([lat, lon])
-                    .addTo(map)
-                    .bindPopup(r.display_name)
-                    .openPopup();
-
-                map.setView([lat, lon], 16);
-
-                listaPesquisas.innerHTML = '';
-                searchInput.value = r.display_name;
-            });
-
-            listaPesquisas.appendChild(item);
+        searchResults.querySelectorAll('[data-place-index]').forEach(item => {
+            item.addEventListener('click', () => selectExternalPlace(places[Number(item.dataset.placeIndex)]));
         });
-
     } catch (error) {
         console.error('Erro ao buscar sugestões:', error);
+        searchResults.innerHTML = '<li class="list-group-item search-message">Não foi possível buscar endereços agora.</li>';
     }
 }
 
-searchInput.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
+async function submitSearch() {
     const query = searchInput.value.trim();
-    if (!query) {
-        listaPesquisas.innerHTML = '';
+    if (!query) return;
+
+    const localArea = allGreenAreas.find(area => area.name?.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')));
+    if (localArea) {
+        selectArea(localArea);
+        searchResults.innerHTML = '';
         return;
     }
-    debounceTimer = setTimeout(() => {
-        buscarSugestoes(query);
-    }, 400);
-});
 
-document.getElementById('searchBtn').addEventListener('click', async () => {
-    const query = searchInput.value.trim();
-    if (!query || !map) return;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+    searchButton.disabled = true;
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        const results = await response.json();
-        if (results.length > 0) {
-            const { lat, lon, display_name } = results[0];
-            if (marcacaoAtual) {
-                map.removeLayer(marcacaoAtual);
-            }
-            marcacaoAtual = L.marker([parseFloat(lat), parseFloat(lon)])
-                .addTo(map)
-                .bindPopup(display_name)
-                .openPopup();
-            map.setView([parseFloat(lat), parseFloat(lon)], 16);
-        } else {
-            alert('Nenhum local encontrado');
-        }
+        const places = await searchPlaces(query);
+        if (places.length) selectExternalPlace(places[0]);
+        else showToast('Nenhum local encontrado para essa busca.', 'error');
     } catch (error) {
         console.error('Erro na busca:', error);
+        showToast('A busca está indisponível no momento.', 'error');
+    } finally {
+        searchButton.disabled = false;
+    }
+}
+
+document.addEventListener('click', event => {
+    const favorite = event.target.closest('[data-favorite-area]');
+    if (favorite) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleFavorite(favorite.dataset.favoriteArea);
+        return;
+    }
+
+    const showArea = event.target.closest('[data-show-area]');
+    if (showArea) {
+        const area = allGreenAreas.find(candidate => String(candidate.id) === showArea.dataset.showArea);
+        if (area) selectArea(area, false);
+        return;
+    }
+
+    const share = event.target.closest('[data-share-area]');
+    if (share) {
+        const area = allGreenAreas.find(candidate => String(candidate.id) === share.dataset.shareArea);
+        if (area) shareArea(area);
+        return;
+    }
+
+    if (event.target.closest('[data-clear-filters]')) clearFilters();
+});
+
+typeFilterGroup?.addEventListener('click', event => {
+    const button = event.target.closest('[data-filter-type]');
+    if (!button) return;
+    selectedType = button.dataset.filterType;
+    typeFilterGroup.querySelectorAll('[data-filter-type]').forEach(filterButton => {
+        const active = filterButton === button;
+        filterButton.classList.toggle('active', active);
+        filterButton.setAttribute('aria-pressed', String(active));
+    });
+    applyFilters();
+});
+
+distanceFilter?.addEventListener('change', () => {
+    maxDistance = distanceFilter.value === 'all' ? Infinity : Number(distanceFilter.value);
+    applyFilters();
+});
+
+retryLocationButton?.addEventListener('click', () => requestUserLocation(true));
+
+closeAreaDetails?.addEventListener('click', () => {
+    detailDrawer.classList.remove('is-open');
+    detailDrawer.setAttribute('aria-hidden', 'true');
+});
+
+searchInput?.addEventListener('input', () => {
+    window.clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    if (!query) {
+        searchResults.innerHTML = '';
+        return;
+    }
+    debounceTimer = window.setTimeout(() => renderSearchSuggestions(query), 450);
+});
+
+searchInput?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const firstResult = searchResults.querySelector('[data-search-area], [data-place-index]');
+        if (firstResult) firstResult.click();
+        else submitSearch();
+    } else if (event.key === 'Escape') {
+        searchResults.innerHTML = '';
     }
 });
 
-searchInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-        const primeiroItem = listaPesquisas.querySelector('li');
-        if (primeiroItem) {
-            primeiroItem.click();
-        } else {
-            document.getElementById('searchBtn').click();
-        }
-    }
+searchButton?.addEventListener('click', submitSearch);
+
+document.addEventListener('click', event => {
+    if (!event.target.closest('.map-search')) searchResults.innerHTML = '';
 });
+
+initializeMap();
+loadMapData();
+requestUserLocation();

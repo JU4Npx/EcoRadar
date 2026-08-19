@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="container py-4">
     <section class="green-area-panel bg-white p-4 mx-auto">
@@ -51,7 +51,8 @@
                     <td class="text-end">
                         <form th:action="@{/areas-verdes/remover/{id}(id=${area.id})}"
                               method="post"
-                              class="d-inline">
+                              class="d-inline"
+                              onsubmit="return confirm('Tem certeza que deseja remover esta área verde? Esta ação não pode ser desfeita.');">
 
                             <button type="submit"
                                     class="btn btn-outline-danger btn-sm">
@@ -68,6 +69,7 @@
         </div>
     </section>
 </main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <script>
     /*<![CDATA[*/

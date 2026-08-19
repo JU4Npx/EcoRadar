@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="container py-4">
     <section class="green-area-panel bg-white p-4 mx-auto">
@@ -39,6 +39,7 @@
                     <th>Tipo</th>
                     <th>Status</th>
                     <th>Cidade</th>
+                    <th>Conteúdo</th>
                     <th class="text-end">Ações</th>
                 </tr>
                 </thead>
@@ -48,7 +49,9 @@
                     <td th:text="${area.type != null ? area.type.displayName : '-'}">Tipo</td>
                     <td th:text="${area.status != null ? area.status.displayName : area.status}">Status</td>
                     <td th:text="${area.address != null ? area.address.city : '-'}">Cidade</td>
+                    <td><div class="content-status-chips"><span th:classappend="${area.primaryPhotoUrl != null ? ' ready' : ''}"><i class="bi bi-image"></i>Foto</span><span th:classappend="${area.openingHours != null ? ' ready' : ''}"><i class="bi bi-clock"></i>Horário</span><span th:classappend="${!#sets.isEmpty(area.amenities) ? ' ready' : ''}"><i class="bi bi-grid"></i>Estrutura</span></div></td>
                     <td class="text-end">
+                        <a class="btn btn-outline-secondary btn-sm" th:href="@{/areas-verdes/{id}(id=${area.id})}" target="_blank" rel="noopener noreferrer"><i class="bi bi-eye me-1"></i>Visualizar</a>
                         <a class="btn btn-outline-success btn-sm"
                            th:href="@{/areas-verdes/editar/{id}(id=${area.id})}">
                             <i class="bi bi-pencil-square me-1"></i>Editar
@@ -60,6 +63,7 @@
         </div>
     </section>
 </main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <script>
     /*<![CDATA[*/

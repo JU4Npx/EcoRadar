@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="container py-4">
     <section class="green-area-panel bg-white p-4 mx-auto">
@@ -28,6 +28,11 @@
         <form th:action="${formAction}" th:object="${greenArea}" method="post" class="row g-3">
             <input type="hidden" th:field="*{id}">
             <input type="hidden" th:field="*{address.greenAreaAddressId}">
+
+            <div class="col-12 form-section-heading">
+                <span><i class="bi bi-info-circle"></i></span>
+                <div><h2>Informações principais</h2><p>Apresente o local de forma clara para quem está planejando uma visita.</p></div>
+            </div>
 
             <div class="col-md-8">
                 <label for="name" class="form-label">Nome</label>
@@ -52,6 +57,65 @@
                 <select id="status" th:field="*{status}" class="form-select" required>
                     <option th:each="status : ${statuses}" th:value="${status}" th:text="${status.displayName}"></option>
                 </select>
+            </div>
+
+            <div class="col-md-8">
+                <label for="openingHours" class="form-label">Horário de funcionamento</label>
+                <input id="openingHours" type="text" th:field="*{openingHours}" class="form-control" maxlength="500" placeholder="Ex.: Todos os dias, das 6h às 22h">
+                <small class="form-text">Use uma frase simples e completa. Se o acesso for livre, informe “Aberto 24 horas”.</small>
+            </div>
+
+            <div class="col-md-4">
+                <label for="contactPhone" class="form-label">Telefone de contato</label>
+                <input id="contactPhone" type="tel" th:field="*{contactPhone}" class="form-control" maxlength="40" placeholder="(82) 3333-0000">
+            </div>
+
+            <div class="col-md-8">
+                <label for="website" class="form-label">Site oficial</label>
+                <input id="website" type="url" th:field="*{website}" class="form-control" maxlength="500" placeholder="https://exemplo.com.br">
+            </div>
+
+            <div class="col-12">
+                <label for="visitTips" class="form-label">Dicas para a visita</label>
+                <textarea id="visitTips" th:field="*{visitTips}" class="form-control" rows="3" placeholder="Ex.: prefira o início da manhã, leve água e protetor solar."></textarea>
+            </div>
+
+            <div class="col-12 form-section-heading">
+                <span><i class="bi bi-grid"></i></span>
+                <div><h2>Estrutura e comodidades</h2><p>Marque somente os recursos confirmados no local.</p></div>
+            </div>
+
+            <div class="col-12">
+                <div class="amenity-form-grid">
+                    <label class="amenity-check" th:each="amenity : ${amenities}">
+                        <input type="checkbox" th:field="*{amenities}" th:value="${amenity}">
+                        <span><i class="bi" th:classappend="${amenity.icon}"></i><strong th:text="${amenity.displayName}">Comodidade</strong><i class="bi bi-check2 amenity-selected-icon"></i></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 form-section-heading">
+                <span><i class="bi bi-images"></i></span>
+                <div><h2>Galeria de fotos</h2><p>Adicione até três imagens horizontais usando endereços HTTPS.</p></div>
+            </div>
+
+            <div class="col-md-4">
+                <label for="imageUrl1" class="form-label">Foto principal</label>
+                <input id="imageUrl1" type="url" th:field="*{imageUrl1}" class="form-control photo-url-input" maxlength="1000" placeholder="https://...">
+            </div>
+            <div class="col-md-4">
+                <label for="imageUrl2" class="form-label">Foto complementar</label>
+                <input id="imageUrl2" type="url" th:field="*{imageUrl2}" class="form-control photo-url-input" maxlength="1000" placeholder="https://...">
+            </div>
+            <div class="col-md-4">
+                <label for="imageUrl3" class="form-label">Terceira foto</label>
+                <input id="imageUrl3" type="url" th:field="*{imageUrl3}" class="form-control photo-url-input" maxlength="1000" placeholder="https://...">
+            </div>
+            <div class="col-12"><div id="photoPreviewGrid" class="photo-preview-grid" aria-live="polite"></div></div>
+
+            <div class="col-12 form-section-heading">
+                <span><i class="bi bi-pin-map"></i></span>
+                <div><h2>Localização</h2><p>Esses dados posicionam corretamente o marcador e ajudam a montar a rota.</p></div>
             </div>
 
             <div class="col-md-4">
@@ -98,7 +162,42 @@
         </form>
     </section>
 </main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    const inputs = Array.from(document.querySelectorAll('.photo-url-input'));
+    const preview = document.getElementById('photoPreviewGrid');
+    if (!preview || !inputs.length) return;
+
+    function renderPreviews() {
+        const urls = inputs.map(input => input.value.trim()).filter(url => /^https?:\/\//i.test(url));
+        preview.replaceChildren();
+        if (!urls.length) {
+            const empty = document.createElement('div');
+            empty.className = 'photo-preview-empty';
+            empty.innerHTML = '<i class="bi bi-image"></i><span>As prévias aparecerão aqui.</span>';
+            preview.appendChild(empty);
+            return;
+        }
+        urls.forEach((url, index) => {
+            const item = document.createElement('div');
+            const image = document.createElement('img');
+            const label = document.createElement('span');
+            item.className = 'photo-preview-item';
+            image.src = url;
+            image.alt = `Prévia da foto ${index + 1}`;
+            image.loading = 'lazy';
+            label.textContent = index === 0 ? 'Capa' : `Foto ${index + 1}`;
+            item.append(image, label);
+            preview.appendChild(item);
+        });
+    }
+
+    inputs.forEach(input => input.addEventListener('input', renderPreviews));
+    renderPreviews();
+})();
+</script>
 </body>
 </html>

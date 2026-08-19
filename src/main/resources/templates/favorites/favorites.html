@@ -1,95 +1,60 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Favoritos - EcoRadar</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>Meus favoritos — EcoRadar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"><link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
-
-<div class="container mt-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-success text-white text-center">
-            <h3><i class="bi bi-heart-fill"></i> Meus Favoritos</h3>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="page-shell favorites-page">
+    <div class="container">
+        <div class="page-intro page-intro-row">
+            <div><span class="eyebrow eyebrow-soft"><i class="bi bi-heart"></i> Sua coleção</span><h1>Meus lugares favoritos</h1><p>Guarde por perto os espaços verdes que fazem bem para você.</p></div>
+            <a th:href="@{/map}" class="btn btn-primary"><i class="bi bi-compass"></i> Descobrir novos lugares</a>
         </div>
-        <div class="card-body p-4">
-            <!-- Se não houver favoritos -->
-            <div th:if="${#lists.isEmpty(favoritos)}" class="alert alert-info text-center">
-                <p>Você ainda não tem nenhuma área verde favoritada.</p>
-                <a href="/home" class="btn btn-success">Voltar para Home e Favoritar</a>
-            </div>
 
-            <!-- Se houver favoritos, renderizar os cards -->
-            <div th:if="${!#lists.isEmpty(favoritos)}" class="row">
-                <div class="col-md-6 col-lg-4 mb-4" th:each="area : ${favoritos}">
-                    <div class="card h-100 shadow-sm border-0 favorite-card">
-                        <div class="card-body">
-                            <!-- Nome da área -->
-                            <h5 class="card-title text-success" th:text="${area.name}"></h5>
+        <section th:if="${#lists.isEmpty(favoritos)}" class="empty-state-card">
+            <div class="empty-state-visual"><i class="bi bi-heart"></i><span><i class="bi bi-leaf-fill"></i></span></div>
+            <h2>Sua coleção ainda está vazia</h2><p>Explore o mapa e toque no coração para guardar seus parques e praças preferidos.</p>
+            <a href="/home#explorar" class="btn btn-primary"><i class="bi bi-map"></i> Explorar áreas verdes</a>
+        </section>
 
-                            <!-- Endereço -->
-                            <div class="mb-3 text-muted small">
-                                <i class="bi bi-geo-alt"></i>
-                                <span th:text="${area.address != null ? area.address.street + ', ' + area.address.city : 'Endereço não informado'}"></span>
-                            </div>
-
-                            <!-- Descrição -->
-                            <p class="card-text" th:text="${area.description}"></p>
-
-                            <!-- Tipo de área -->
-                            <div class="mb-3">
-                                <span class="badge bg-success" th:text="${area.type}"></span>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent text-center d-flex gap-2 flex-column">
-                            <div class="d-flex gap-2">
-                                <a th:href="@{/map(areaId=${area.id})}" class="btn btn-outline-success flex-grow-1 btn-sm">
-                                    <i class="bi bi-map"></i> Ver no Mapa
-                                </a>
-                                <button class="btn btn-outline-danger btn-sm remove-favorite-btn"
-                                        th:data-area-id="${area.id}"
-                                        type="button">
-                                    <i class="bi bi-trash"></i> Remover
-                                </button>
-                            </div>
-                            <a th:href="@{/areas-verdes/{id}/eventos(id=${area.id})}" class="btn btn-success btn-sm mt-2 w-100">
-                                <i class="bi bi-calendar-event"></i> Visualizar Eventos
-                            </a>
-                        </div>
-
-                    </div>
+        <section th:if="${!#lists.isEmpty(favoritos)}" class="favorites-grid">
+            <article class="favorite-card" th:each="area, stat : ${favoritos}">
+                <div class="favorite-card-visual" th:classappend="${' favorite-visual-' + (stat.index % 3)}" th:style="${area.primaryPhotoUrl != null ? 'background-image:url(' + area.primaryPhotoUrl + ');background-size:cover;background-position:center' : ''}">
+                    <i th:if="${area.primaryPhotoUrl == null}" class="bi bi-tree-fill"></i><span class="favorite-type" th:text="${area.type != null ? area.type.displayName : 'Área verde'}">Parque</span>
+                    <button class="favorite-remove remove-favorite-btn" th:data-area-id="${area.id}" type="button" aria-label="Remover dos favoritos"><i class="bi bi-heart-fill"></i></button>
                 </div>
-            </div>
-        </div>
+                <div class="favorite-card-body">
+                    <h2 th:text="${area.name}">Nome da área</h2>
+                    <p class="favorite-location"><i class="bi bi-geo-alt"></i><span th:text="${area.address != null ? area.address.street + (area.address.city != null ? ', ' + area.address.city : '') : 'Endereço não informado'}">Endereço</span></p>
+                    <p class="favorite-description" th:text="${area.description != null and !#strings.isEmpty(area.description) ? area.description : 'Um espaço verde para conhecer e aproveitar.'}">Descrição</p>
+                    <div class="favorite-actions"><a th:href="@{/areas-verdes/{id}(id=${area.id})}" class="btn btn-outline-success"><i class="bi bi-info-circle"></i> Ver detalhes</a><a th:href="@{/areas-verdes/{id}/eventos(id=${area.id})}" class="btn btn-primary"><i class="bi bi-calendar-event"></i> Eventos</a></div>
+                </div>
+            </article>
+        </section>
     </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Remover favorito
-    document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const areaId = this.getAttribute('data-area-id');
-            try {
-                const resp = await fetch(`/api/favorites/${areaId}`, {
-                    method: 'DELETE'
-                });
-                if (resp.ok) {
-                    // Recarregar a página para atualizar a lista
-                    window.location.reload();
-                } else {
-                    alert('Erro ao remover favorito');
-                }
-            } catch (e) {
-                console.error('Erro:', e);
-                alert('Erro ao remover favorito');
-            }
-        });
+document.querySelectorAll('.remove-favorite-btn').forEach(function (button) {
+    button.addEventListener('click', async function () {
+        if (!window.confirm('Remover esta área dos seus favoritos?')) return;
+        this.disabled = true;
+        try {
+            const response = await fetch('/api/favorites/' + this.dataset.areaId, { method: 'DELETE' });
+            if (response.ok) window.location.reload();
+            else throw new Error('Não foi possível remover o favorito.');
+        } catch (error) {
+            this.disabled = false;
+            window.alert(error.message);
+        }
     });
+});
 </script>
-</body>
-</html>
+</body></html>

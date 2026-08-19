@@ -1,71 +1,140 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Encontre parques, praças, áreas de preservação e eventos ambientais perto de você.">
     <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
-    <title>EcoRadar</title>
-    <link href="https://googleapis.com" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <title>EcoRadar — Descubra o verde ao seu redor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div th:replace="fragments/navbar :: navbar"></div>
-<div class="container-fluid vh-100 px-0">
-    <div class="container-fluid py-3">
-        <div class="row justify-content-center">
-            <div class="bg-white shadow-lg rounded p-4 box home-hero">
-                <div class="row align-items-center gx-4">
-                    <div class="col-md-6 text-center">
-                        <img src="/images/EcoRadarLogoSemNome.png" class="d-block mx-auto hero-logo" alt="EcoRadar">
-                    </div>
-                    <div class="col-md-6">
-                        <span class="eyebrow">Descubra o verde</span>
-                        <h1 class="display-6 fw-bold hero-title">Conecte-se com o verde ao seu redor</h1>
-                        <p class="lead hero-lead">
-                            O <strong>EcoRadar</strong> é a sua bússola para descobrir parques, praças e áreas de preservação a poucos passos de você.
-                        </p>
-                        <p class="hero-text">
-                            Veja eventos em andamento e futuros, favorite os espaços e acompanhe a programação local.
-                        </p>
-                        <div class="d-flex gap-2 mt-3">
-                            <a href="#map" class="btn btn-success hero-cta">Ver no mapa</a>
-                            <!-- botão admin removido conforme solicitado -->
-                        </div>
-                    </div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main>
+    <section class="home-hero">
+        <div class="hero-orb hero-orb-one"></div>
+        <div class="hero-orb hero-orb-two"></div>
+        <div class="container home-hero-inner">
+            <div class="hero-content">
+                <span class="eyebrow"><i class="bi bi-radar"></i> Seu radar de natureza</span>
+                <h1>Encontre um lugar <span>mais verde</span> para viver a cidade.</h1>
+                <p>Descubra parques, praças e áreas de preservação perto de você. Explore espaços, acompanhe eventos e salve seus lugares favoritos.</p>
+                <div class="hero-actions">
+                    <a href="#explorar" class="btn btn-primary btn-lg"><i class="bi bi-compass"></i> Explorar agora</a>
+                    <a th:href="@{/map}" class="btn btn-quiet btn-lg"><i class="bi bi-arrows-fullscreen"></i> Abrir mapa completo</a>
+                </div>
+                <div class="hero-trust">
+                    <span><i class="bi bi-geo-alt-fill"></i> Áreas próximas</span>
+                    <span><i class="bi bi-calendar2-check"></i> Eventos locais</span>
+                    <span><i class="bi bi-heart-fill"></i> Favoritos</span>
                 </div>
             </div>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="radar-card">
+                    <div class="radar-ring ring-one"></div>
+                    <div class="radar-ring ring-two"></div>
+                    <div class="radar-ring ring-three"></div>
+                    <div class="radar-sweep"></div>
+                    <div class="radar-pin pin-one"><i class="bi bi-tree-fill"></i></div>
+                    <div class="radar-pin pin-two"><i class="bi bi-flower1"></i></div>
+                    <div class="radar-pin pin-three"><i class="bi bi-tree-fill"></i></div>
+                    <img src="/images/EcoRadarLogoSemNome.png" alt="">
+                </div>
+                <div class="floating-note note-top"><i class="bi bi-leaf-fill"></i><span><strong>Natureza</strong> perto de você</span></div>
+                <div class="floating-note note-bottom"><i class="bi bi-people-fill"></i><span><strong>Eventos</strong> para participar</span></div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="row h-50">
-        <div class="col-md-2 bg-light border-end p-3">
-            <h5>Local</h5>
-            <div id="eventList" class="nearby-list">
-                <div class="nearby-empty text-muted">Permita sua localização para ver áreas verdes próximas.</div>
+    <section class="explore-section" id="explorar">
+        <div class="container-fluid explore-container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow eyebrow-soft"><i class="bi bi-map"></i> Explore sua região</span>
+                    <h2>O verde está mais perto do que parece</h2>
+                    <p>Permita sua localização ou pesquise um endereço para começar.</p>
+                </div>
+                <a th:href="@{/map}" class="section-link">Ver em tela cheia <i class="bi bi-arrow-up-right"></i></a>
+            </div>
+
+            <div class="map-dashboard">
+                <aside class="map-side-panel nearby-panel">
+                    <div class="panel-heading">
+                        <span class="panel-icon"><i class="bi bi-geo-alt"></i></span>
+                        <div><h3>Perto de você</h3><p id="nearbySubtitle">Áreas verdes próximas</p></div>
+                    </div>
+                    <div id="eventList" class="nearby-list">
+                        <div class="panel-empty"><i class="bi bi-crosshair"></i><p>Ative sua localização para encontrar espaços próximos.</p></div>
+                    </div>
+                </aside>
+
+                <div class="map-main">
+                    <div class="map-search">
+                        <i class="bi bi-search"></i>
+                        <input type="search" id="searchInput" class="form-control" placeholder="Busque uma praça, parque ou endereço" autocomplete="off" aria-label="Pesquisar no mapa">
+                        <button class="btn btn-primary" type="button" id="searchBtn"><span>Buscar</span><i class="bi bi-arrow-right"></i></button>
+                        <ul id="listaPesquisas" class="list-group search-results"></ul>
+                    </div>
+                    <div class="map-filter-bar" aria-label="Filtros do mapa">
+                        <div id="typeFilterGroup" class="map-filter-types" role="group" aria-label="Filtrar por categoria"></div>
+                        <label class="distance-filter" for="distanceFilter">
+                            <i class="bi bi-signpost-2"></i>
+                            <select id="distanceFilter" aria-label="Filtrar por distância" disabled title="Ative sua localização para filtrar por distância">
+                                <option value="all">Qualquer distância</option>
+                                <option value="2">Até 2 km</option>
+                                <option value="5">Até 5 km</option>
+                                <option value="10">Até 10 km</option>
+                            </select>
+                        </label>
+                        <span id="mapResultCount" class="map-result-count" aria-live="polite"></span>
+                    </div>
+                    <div id="locationNotice" class="location-notice" role="status" hidden>
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Exibindo Maceió como referência.</span>
+                        <button type="button" id="retryLocationBtn">Usar minha localização</button>
+                    </div>
+                    <div id="map" class="home-map" aria-label="Mapa de áreas verdes"></div>
+                    <div class="map-attribution-note"><i class="bi bi-mouse"></i> Clique em um marcador para ver detalhes</div>
+                </div>
+
+                <aside id="areaDetailDrawer" class="map-side-panel events-panel map-detail-drawer" aria-label="Detalhes da área verde" aria-hidden="false">
+                    <button type="button" id="closeAreaDetails" class="detail-close home-detail-close" aria-label="Fechar detalhes"><i class="bi bi-x-lg"></i></button>
+                    <div class="panel-heading">
+                        <span class="panel-icon panel-icon-gold"><i class="bi bi-info-circle"></i></span>
+                        <div><h3>Detalhes do local</h3><p>Informações e agenda</p></div>
+                    </div>
+                    <div id="areaDetails" class="area-details-panel">
+                        <div class="panel-empty"><i class="bi bi-cursor"></i><p>Selecione uma área no mapa para conhecer o local.</p></div>
+                    </div>
+                </aside>
             </div>
         </div>
-        <div class="col-md-8 p-0 position-relative">
-            <div class="position-absolute top-0 start-50 translate-middle-x mt-5 z-3 d-flex justify-content-center w-50">
-                <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar">
-                <button class="btn btn-primary" type="button" id="searchBtn">Buscar</button>
-                <ul id="listaPesquisas" class="list-group position-absolute w-100"></ul>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-heading centered-heading">
+                <div><span class="eyebrow eyebrow-soft">Simples e rápido</span><h2>Seu próximo respiro em três passos</h2></div>
             </div>
-            <div class="w-100 h-100 mt-0 z-0" id="map"></div>
-        </div>
-        <div class="col-md-2 bg-light border-start p-3">
-            <h5>Eventos</h5>
-            <div id="eventDetails">
-                <p>Selecione uma área verde para ver eventos relacionados aqui.</p>
+            <div class="steps-grid">
+                <article><span>01</span><i class="bi bi-search"></i><h3>Descubra</h3><p>Encontre áreas verdes por proximidade ou pesquisa.</p></article>
+                <article><span>02</span><i class="bi bi-pin-map"></i><h3>Explore</h3><p>Veja informações do local e a programação disponível.</p></article>
+                <article><span>03</span><i class="bi bi-heart"></i><h3>Guarde</h3><p>Favorite os lugares que você quer visitar novamente.</p></article>
             </div>
         </div>
-    </div>
-</div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/map.js"></script>
 </body>
 </html>

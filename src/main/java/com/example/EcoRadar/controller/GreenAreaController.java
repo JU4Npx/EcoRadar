@@ -5,10 +5,12 @@ import com.example.EcoRadar.model.entity.GreenAreaAddress;
 import com.example.EcoRadar.model.entity.User;
 import com.example.EcoRadar.model.enums.GreenAreaStatus;
 import com.example.EcoRadar.model.enums.GreenAreaType;
+import com.example.EcoRadar.model.enums.GreenAreaAmenity;
 import com.example.EcoRadar.model.enums.Permission;
 import com.example.EcoRadar.service.GreenAreaService;
 import com.example.EcoRadar.model.entity.Event;
 import com.example.EcoRadar.service.EventService;
+import com.example.EcoRadar.service.FavoriteService;
 import com.example.EcoRadar.model.enums.EventStatus;
 import com.example.EcoRadar.model.enums.EventCategory;
 
@@ -42,6 +44,8 @@ public class GreenAreaController {
     private GreenAreaService service;
     @Autowired
     private EventService eventService;
+    @Autowired
+    private FavoriteService favoriteService;
 
 
     @GetMapping("/nova")
@@ -93,6 +97,8 @@ public class GreenAreaController {
                 GreenAreaStatus.values()
         );
 
+        model.addAttribute("amenities", GreenAreaAmenity.values());
+
         model.addAttribute(
                 "pageTitle",
                 "Adicionar área verde"
@@ -115,6 +121,46 @@ public class GreenAreaController {
 
         return "green areas/addGreenAreas";
     }
+    @GetMapping("/{id}")
+    public String detail(
+            @PathVariable Integer id,
+            Model model,
+            HttpSession session,
+            RedirectAttributes ra
+    ) {
+        GreenArea area = service.findById(id).orElse(null);
+        if (area == null || area.getStatus() != GreenAreaStatus.ACTIVE) {
+            ra.addFlashAttribute("error", "Área verde não encontrada ou indisponível.");
+            return "redirect:/home";
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> upcomingEvents = eventService.searchForGreenArea(area).stream()
+                .filter(event -> event.getStatus() != EventStatus.CANCELED)
+                .filter(event -> event.getEndDate() != null
+                        ? !event.getEndDate().isBefore(now)
+                        : event.getStartDate() == null || !event.getStartDate().isBefore(now))
+                .sorted(Comparator.comparing(Event::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())))
+                .limit(4)
+                .toList();
+
+        List<GreenArea> relatedAreas = service.findAllActives().stream()
+                .filter(candidate -> !candidate.getId().equals(area.getId()))
+                .filter(candidate -> area.getType() != null && candidate.getType() == area.getType())
+                .limit(3)
+                .toList();
+
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        boolean favorite = loggedUser != null && favoriteService.isFavorite(loggedUser, id);
+
+        model.addAttribute("area", area);
+        model.addAttribute("upcomingEvents", upcomingEvents);
+        model.addAttribute("relatedAreas", relatedAreas);
+        model.addAttribute("isFavorite", favorite);
+        model.addAttribute("fullAddress", buildFullAddress(area.getAddress()));
+        return "green areas/detailGreenArea";
+    }
+
     @GetMapping("/{id}/eventos")
     public String eventsByGreenArea(
             @PathVariable Integer id,
@@ -271,6 +317,8 @@ public class GreenAreaController {
                 "statuses",
                 GreenAreaStatus.values()
         );
+
+        model.addAttribute("amenities", GreenAreaAmenity.values());
 
         model.addAttribute(
                 "pageTitle",
@@ -463,5 +511,17 @@ public class GreenAreaController {
         );
 
         return "redirect:/areas-verdes/remover";
+    }
+
+    private String buildFullAddress(GreenAreaAddress address) {
+        if (address == null) return "Endereço não informado";
+
+        return String.join(", ",
+                        Optional.ofNullable(address.getStreet()).orElse(""),
+                        Optional.ofNullable(address.getNeighborhood()).orElse(""),
+                        Optional.ofNullable(address.getCity()).orElse(""),
+                        Optional.ofNullable(address.getState()).orElse(""))
+                .replaceAll("(^,\\s*|,\\s*,|,\\s*$)", "")
+                .replaceAll("\\s{2,}", " ");
     }
 }

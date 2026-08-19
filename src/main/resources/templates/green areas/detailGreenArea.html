@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" th:content="${area.description != null and !#strings.isEmpty(area.description) ? area.description : 'Conheça este local no EcoRadar.'}">
+    <meta property="og:type" content="place">
+    <meta property="og:title" th:content="${area.name + ' — EcoRadar'}">
+    <meta property="og:description" th:content="${area.description != null ? area.description : 'Informações, estrutura e eventos deste local.'}">
+    <meta property="og:image" th:if="${area.primaryPhotoUrl != null}" th:content="${area.primaryPhotoUrl}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/EcoRadarLogoSemNome.png">
+    <title th:text="${area.name + ' — EcoRadar'}">Local — EcoRadar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="place-detail-body">
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="place-detail-page">
+    <div class="container place-detail-container">
+        <nav class="place-breadcrumb" aria-label="Navegação estrutural">
+            <a th:href="@{/home}">Início</a><i class="bi bi-chevron-right"></i>
+            <a th:href="@{/map}">Explorar</a><i class="bi bi-chevron-right"></i>
+            <span aria-current="page" th:text="${area.name}">Local</span>
+        </nav>
+
+        <section class="place-gallery" th:classappend="${#lists.size(area.photoUrls) == 1 ? ' one-photo' : (#lists.size(area.photoUrls) == 2 ? ' two-photos' : '')}">
+            <th:block th:if="${!#lists.isEmpty(area.photoUrls)}">
+                <button type="button" class="place-photo" th:each="photo, stat : ${area.photoUrls}" th:classappend="${stat.first ? ' place-photo-main' : ''}" th:data-photo-src="${photo}" th:data-photo-alt="${area.name + ' — foto ' + (stat.index + 1)}" aria-label="Ampliar foto">
+                    <img th:src="${photo}" th:alt="${area.name + ' — foto ' + (stat.index + 1)}" loading="lazy">
+                    <span th:if="${stat.first}" class="photo-count"><i class="bi bi-images"></i><span th:text="${#lists.size(area.photoUrls) + ' fotos'}">3 fotos</span></span>
+                </button>
+            </th:block>
+            <div class="place-gallery-fallback" th:if="${#lists.isEmpty(area.photoUrls)}">
+                <span class="fallback-orb"></span><i class="bi bi-tree-fill"></i>
+                <div><strong th:text="${area.name}">Área verde</strong><small>Um lugar para descobrir</small></div>
+            </div>
+        </section>
+
+        <header class="place-title-row">
+            <div>
+                <span class="area-type-badge"><i class="bi bi-geo-alt-fill"></i><span th:text="${area.type != null ? area.type.displayName : 'Área verde'}">Parque</span></span>
+                <h1 th:text="${area.name}">Nome do local</h1>
+                <p><i class="bi bi-geo-alt"></i><span th:text="${fullAddress}">Endereço</span></p>
+            </div>
+            <div class="place-heading-actions">
+                <button type="button" id="sharePlaceButton" class="btn btn-outline-success"><i class="bi bi-share"></i>Compartilhar</button>
+                <button type="button" id="favoritePlaceButton" class="btn btn-outline-success" th:classappend="${isFavorite ? ' active' : ''}" th:data-area-id="${area.id}" th:aria-label="${isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
+                    <i class="bi" th:classappend="${isFavorite ? ' bi-heart-fill' : ' bi-heart'}"></i><span th:text="${isFavorite ? 'Salvo' : 'Salvar'}">Salvar</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="place-content-layout">
+            <div class="place-main-content">
+                <section class="place-content-card place-about-card">
+                    <div class="place-section-heading"><span><i class="bi bi-leaf"></i></span><div><small>Conheça o espaço</small><h2>Sobre este local</h2></div></div>
+                    <p th:text="${area.description != null and !#strings.isEmpty(area.description) ? area.description : 'Este espaço ainda não possui uma descrição detalhada.'}">Descrição.</p>
+                </section>
+
+                <section class="place-content-card">
+                    <div class="place-section-heading"><span><i class="bi bi-grid"></i></span><div><small>Planeje com tranquilidade</small><h2>Estrutura e comodidades</h2></div></div>
+                    <div class="place-amenities" th:if="${!#sets.isEmpty(area.amenities)}">
+                        <article th:each="amenity : ${area.amenities}"><i class="bi" th:classappend="${amenity.icon}"></i><span th:text="${amenity.displayName}">Comodidade</span><i class="bi bi-check-circle-fill"></i></article>
+                    </div>
+                    <div class="place-info-empty" th:if="${#sets.isEmpty(area.amenities)}"><i class="bi bi-info-circle"></i><span>As comodidades deste local ainda estão sendo verificadas.</span></div>
+                </section>
+
+                <section class="place-content-card" th:if="${area.visitTips != null and !#strings.isEmpty(area.visitTips)}">
+                    <div class="place-section-heading"><span class="gold"><i class="bi bi-lightbulb"></i></span><div><small>Antes de sair</small><h2>Dicas para a visita</h2></div></div>
+                    <div class="visit-tip-box"><i class="bi bi-quote"></i><p th:text="${area.visitTips}">Dicas.</p></div>
+                </section>
+
+                <section class="place-content-card place-events-card">
+                    <div class="place-section-heading-row">
+                        <div class="place-section-heading"><span class="gold"><i class="bi bi-calendar-event"></i></span><div><small>Agenda verde</small><h2>Próximos eventos</h2></div></div>
+                        <a th:href="@{/areas-verdes/{id}/eventos(id=${area.id})}" class="section-link">Ver agenda completa <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <div class="place-event-list" th:if="${!#lists.isEmpty(upcomingEvents)}">
+                        <article th:each="event : ${upcomingEvents}">
+                            <div class="place-event-date" th:if="${event.startDate != null}"><strong th:text="${T(java.time.format.DateTimeFormatter).ofPattern('dd').format(event.startDate)}">12</strong><span th:text="${T(java.time.format.DateTimeFormatter).ofPattern('MM').format(event.startDate)}">08</span></div>
+                            <div class="place-event-date no-date" th:if="${event.startDate == null}"><i class="bi bi-calendar"></i></div>
+                            <div class="place-event-copy"><span th:text="${event.category != null ? event.category.displayName : 'Evento'}">Categoria</span><h3 th:text="${event.title}">Evento</h3><p><i class="bi bi-clock"></i><span th:text="${event.startDate != null ? T(java.time.format.DateTimeFormatter).ofPattern('HH:mm').format(event.startDate) : 'Horário a confirmar'}">Horário</span></p></div>
+                        </article>
+                    </div>
+                    <div class="place-info-empty" th:if="${#lists.isEmpty(upcomingEvents)}"><i class="bi bi-calendar2-heart"></i><span>Nenhum evento próximo foi publicado para este local.</span></div>
+                </section>
+            </div>
+
+            <aside class="place-visit-column">
+                <section class="visit-planner-card">
+                    <div class="visit-planner-heading"><span><i class="bi bi-compass"></i></span><div><small>Organize seu passeio</small><h2>Planeje sua visita</h2></div></div>
+                    <dl class="visit-facts">
+                        <div><dt><i class="bi bi-clock"></i>Funcionamento</dt><dd th:text="${area.openingHours != null ? area.openingHours : 'Horário não informado'}">Horário</dd></div>
+                        <div><dt><i class="bi bi-geo-alt"></i>Endereço</dt><dd th:text="${fullAddress}">Endereço</dd></div>
+                        <div th:if="${area.contactPhone != null}"><dt><i class="bi bi-telephone"></i>Contato</dt><dd><a th:href="${'tel:' + area.contactPhone}" th:text="${area.contactPhone}">Telefone</a></dd></div>
+                        <div th:if="${area.website != null}"><dt><i class="bi bi-globe2"></i>Site oficial</dt><dd><a th:href="${area.website}" target="_blank" rel="noopener noreferrer">Visitar site <i class="bi bi-arrow-up-right"></i></a></dd></div>
+                    </dl>
+                    <a class="btn btn-primary visit-directions-button" th:if="${area.address != null}" th:href="${'https://www.google.com/maps/dir/?api=1&destination=' + area.address.latitude + ',' + area.address.longitude}" target="_blank" rel="noopener noreferrer"><i class="bi bi-sign-turn-right"></i>Como chegar</a>
+                </section>
+
+                <section class="place-mini-map-card" th:if="${area.address != null}">
+                    <div id="placeMiniMap" class="place-mini-map" th:attr="aria-label=${'Mapa de ' + area.name}"></div>
+                    <div><i class="bi bi-pin-map-fill"></i><span><strong>Localização no mapa</strong><small>Use os controles para explorar os arredores.</small></span></div>
+                </section>
+            </aside>
+        </div>
+
+        <section class="related-places" th:if="${!#lists.isEmpty(relatedAreas)}">
+            <div class="section-heading"><div><span class="eyebrow eyebrow-soft">Continue explorando</span><h2>Outros lugares parecidos</h2></div><a th:href="@{/map}" class="section-link">Ver todos <i class="bi bi-arrow-up-right"></i></a></div>
+            <div class="related-place-grid">
+                <a th:each="related, stat : ${relatedAreas}" th:href="@{/areas-verdes/{id}(id=${related.id})}" class="related-place-card">
+                    <div class="related-place-visual" th:style="${related.primaryPhotoUrl != null ? 'background-image:url(' + related.primaryPhotoUrl + ')' : ''}" th:classappend="${related.primaryPhotoUrl == null ? ' fallback-' + (stat.index % 3) : ''}"><i th:if="${related.primaryPhotoUrl == null}" class="bi bi-tree-fill"></i><span th:text="${related.type != null ? related.type.displayName : 'Área verde'}">Tipo</span></div>
+                    <div><h3 th:text="${related.name}">Local</h3><p><i class="bi bi-geo-alt"></i><span th:text="${related.address != null and related.address.neighborhood != null ? related.address.neighborhood : 'Conheça este espaço'}">Bairro</span></p></div>
+                </a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<div class="modal fade place-photo-modal" id="placePhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content"><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button><img id="expandedPlacePhoto" src="" alt=""></div></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+(function () {
+    const areaId = /*[[${area.id}]]*/ 0;
+    const areaName = /*[[${area.name}]]*/ 'Local';
+    const latitude = /*[[${area.address != null ? area.address.latitude : null}]]*/ null;
+    const longitude = /*[[${area.address != null ? area.address.longitude : null}]]*/ null;
+    const favoriteButton = document.getElementById('favoritePlaceButton');
+
+    function notify(message, tone) {
+        let region = document.querySelector('.eco-toast-region');
+        if (!region) { region = document.createElement('div'); region.className = 'eco-toast-region'; region.setAttribute('aria-live', 'polite'); document.body.appendChild(region); }
+        const toast = document.createElement('div');
+        toast.className = `eco-toast eco-toast-${tone === 'error' ? 'error' : 'success'}`;
+        toast.innerHTML = `<i class="bi ${tone === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'}"></i><span></span>`;
+        toast.querySelector('span').textContent = message;
+        region.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('is-visible'));
+        setTimeout(() => { toast.classList.remove('is-visible'); setTimeout(() => toast.remove(), 220); }, 3000);
+    }
+
+    favoriteButton?.addEventListener('click', async function () {
+        if (!window.LOGGED_USER) { window.location.href = '/login'; return; }
+        const active = this.classList.contains('active');
+        this.disabled = true;
+        try {
+            const response = await fetch(`/api/favorites/${areaId}`, { method: active ? 'DELETE' : 'POST' });
+            if (!response.ok) throw new Error();
+            this.classList.toggle('active', !active);
+            this.querySelector('i').className = `bi ${active ? 'bi-heart' : 'bi-heart-fill'}`;
+            this.querySelector('span').textContent = active ? 'Salvar' : 'Salvo';
+            notify(active ? 'Local removido dos favoritos.' : 'Local salvo nos favoritos!');
+        } catch (error) { notify('Não foi possível atualizar seus favoritos.', 'error'); }
+        finally { this.disabled = false; }
+    });
+
+    document.getElementById('sharePlaceButton')?.addEventListener('click', async function () {
+        const data = { title: `${areaName} — EcoRadar`, text: `Conheça ${areaName} no EcoRadar.`, url: window.location.href };
+        try {
+            if (navigator.share) await navigator.share(data);
+            else { await navigator.clipboard.writeText(window.location.href); notify('Link copiado!'); }
+        } catch (error) { if (error.name !== 'AbortError') notify('Não foi possível compartilhar agora.', 'error'); }
+    });
+
+    const photoModalElement = document.getElementById('placePhotoModal');
+    const photoModal = photoModalElement ? new bootstrap.Modal(photoModalElement) : null;
+    document.querySelectorAll('[data-photo-src]').forEach(button => button.addEventListener('click', function () {
+        const image = document.getElementById('expandedPlacePhoto');
+        image.src = this.dataset.photoSrc;
+        image.alt = this.dataset.photoAlt || areaName;
+        photoModal?.show();
+    }));
+
+    document.querySelectorAll('.place-gallery img, .related-place-visual').forEach(element => {
+        if (element.tagName === 'IMG') element.addEventListener('error', () => element.closest('.place-photo')?.classList.add('image-error'));
+    });
+
+    if (latitude != null && longitude != null && document.getElementById('placeMiniMap')) {
+        const detailMap = L.map('placeMiniMap', { scrollWheelZoom: false }).setView([latitude, longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(detailMap);
+        L.marker([latitude, longitude]).addTo(detailMap).bindPopup(areaName).openPopup();
+    }
+})();
+</script>
+</body>
+</html>

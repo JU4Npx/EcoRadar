@@ -36,6 +36,20 @@ public class GreenAreaApiController {
                     m.put("id", g.getId());
                     m.put("name", g.getName());
                     m.put("description", g.getDescription());
+                    m.put("type", g.getType() != null ? g.getType().name() : null);
+                    m.put("typeLabel", g.getType() != null ? g.getType().getDisplayName() : "ÁREA VERDE");
+                    m.put("openingHours", g.getOpeningHours());
+                    m.put("contactPhone", g.getContactPhone());
+                    m.put("website", g.getWebsite());
+                    m.put("visitTips", g.getVisitTips());
+                    m.put("photoUrls", g.getPhotoUrls());
+                    m.put("primaryPhotoUrl", g.getPrimaryPhotoUrl());
+                    m.put("amenities", g.getAmenities().stream()
+                            .map(amenity -> Map.of(
+                                    "name", amenity.name(),
+                                    "label", amenity.getDisplayName(),
+                                    "icon", amenity.getIcon()))
+                            .toList());
                     GreenAreaAddress addr = g.getAddress();
                     if (addr != null) {
                         BigDecimal lat = addr.getLatitude();
