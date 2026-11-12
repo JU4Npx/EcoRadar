@@ -24,12 +24,21 @@
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/map}"><i class="bi bi-map"></i>Explorar mapa</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/monitoramento}"><i class="bi bi-activity"></i>Monitoramento</a>
+                </li>
                 <li class="nav-item" th:if="${session.loggedUser != null}">
                     <a class="nav-link" th:href="@{/favorites}"><i class="bi bi-heart"></i>Favoritos</a>
                 </li>
 
                 <li class="nav-item" th:if="${session.loggedUser != null and session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
                     <a class="nav-link" th:href="@{/users}"><i class="bi bi-people"></i>Usuários</a>
+                </li>
+                <li class="nav-item" th:if="${session.loggedUser != null and session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
+                    <a class="nav-link" th:href="@{/admin/denuncias}"><i class="bi bi-clipboard2-pulse"></i>Gestão ambiental</a>
+                </li>
+                <li class="nav-item" th:if="${session.loggedUser != null and session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}">
+                    <a class="nav-link" th:href="@{/admin/relatorios}"><i class="bi bi-file-earmark-bar-graph"></i>Relatórios</a>
                 </li>
 
                 <li class="nav-item dropdown" th:if="${session.loggedUser != null and (

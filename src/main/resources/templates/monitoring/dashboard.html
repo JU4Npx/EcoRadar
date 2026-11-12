@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Acompanhe indicadores ambientais, eventos e denúncias da comunidade no EcoRadar.">
+    <title>Monitoramento ambiental — EcoRadar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/report-tracking.css">
+    <link rel="stylesheet" href="/css/environmental-heatmap.css">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="monitoring-page">
+    <div class="container monitoring-container">
+        <header class="monitoring-heading">
+            <div>
+                <span class="eyebrow eyebrow-soft"><i class="bi bi-activity"></i> EcoRadar 2.0</span>
+                <h1>Monitoramento ambiental</h1>
+                <p>Dados da rede de áreas verdes e ocorrências compartilhadas pela comunidade.</p>
+            </div>
+            <a class="btn btn-primary" href="#registrar"><i class="bi bi-plus-lg"></i> Registrar denúncia</a>
+        </header>
+
+        <div th:if="${message}" class="alert alert-success" role="status"><i class="bi bi-check-circle"></i><span th:text="${message}"></span></div>
+        <div th:if="${error}" class="alert alert-danger" role="alert"><i class="bi bi-exclamation-circle"></i><span th:text="${error}"></span></div>
+
+        <section class="monitoring-metrics" aria-label="Indicadores ambientais">
+            <article class="monitoring-metric metric-green"><span><i class="bi bi-tree"></i></span><div><small>Áreas verdes ativas</small><strong th:text="${activeAreaCount}">0</strong><p>Espaços disponíveis na rede</p></div></article>
+            <article class="monitoring-metric metric-blue"><span><i class="bi bi-pin-map"></i></span><div><small>Áreas mapeadas</small><strong th:text="${mappedAreaCount}">0</strong><p>Com localização cadastrada</p></div></article>
+            <article class="monitoring-metric metric-amber"><span><i class="bi bi-calendar2-event"></i></span><div><small>Próximos eventos</small><strong th:text="${upcomingEventCount}">0</strong><p>Programação ambiental</p></div></article>
+            <article class="monitoring-metric metric-coral"><span><i class="bi bi-clipboard2-pulse"></i></span><div><small>Denúncias em aberto</small><strong th:text="${openReportCount}">0</strong><p th:text="|${reportCount} registros da comunidade|">0 registros da comunidade</p></div></article>
+        </section>
+
+        <section class="monitoring-heatmap-section" aria-labelledby="heatmapTitle">
+            <header class="monitoring-heatmap-heading">
+                <div><span class="eyebrow eyebrow-soft"><i class="bi bi-geo-alt"></i> DISTRIBUIÇÃO TERRITORIAL</span><h2 id="heatmapTitle">Concentração de ocorrências</h2><p>As áreas mais intensas indicam maior proximidade entre denúncias registradas.</p></div>
+                <label for="heatmapCategory">Categoria<select id="heatmapCategory" class="form-select"><option value="ALL">Todas as categorias</option><option th:each="category : ${categories}" th:value="${category.name()}" th:text="${category.label}">Categoria</option></select></label>
+            </header>
+            <div class="heatmap-frame"><div id="reportHeatmap" class="report-heatmap" role="application" aria-label="Mapa de calor de denúncias ambientais"></div><span id="heatmapCount" class="heatmap-count" aria-live="polite">Carregando ocorrências</span></div>
+        </section>
+
+        <div class="monitoring-columns">
+            <section id="registrar" class="monitoring-section report-compose">
+                <div class="monitoring-section-heading">
+                    <span class="section-icon coral-icon"><i class="bi bi-megaphone"></i></span>
+                    <div><small>PARTICIPAÇÃO CIDADÃ</small><h2>Relate uma ocorrência</h2></div>
+                </div>
+                <form th:action="@{/denuncias}" method="post" class="report-form">
+                    <div class="form-field">
+                        <label for="reportTitle">O que está acontecendo?</label>
+                        <input id="reportTitle" name="title" class="form-control" type="text" minlength="5" maxlength="120" placeholder="Ex.: Descarte de entulho na praça" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="reportCategory">Categoria</label>
+                        <select id="reportCategory" name="category" class="form-select" required>
+                            <option value="" disabled selected>Selecione uma categoria</option>
+                            <option th:each="category : ${categories}" th:value="${category}" th:text="${category.label}">Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="reportRegion">Bairro ou região</label>
+                        <input id="reportRegion" name="regionLabel" class="form-control" type="text" maxlength="120" placeholder="Ex.: Centro, Pajuçara">
+                    </div>
+                    <div class="form-field">
+                        <label for="reportDescription">Detalhes</label>
+                        <textarea id="reportDescription" name="description" class="form-control" minlength="20" maxlength="3000" placeholder="Descreva o problema e referências próximas para ajudar na localização." required></textarea>
+                    </div>
+                    <div class="report-location-heading">
+                        <label>Marque o ponto no mapa</label>
+                        <button type="button" id="useReportLocation" class="location-action"><i class="bi bi-crosshair"></i> Minha localização</button>
+                    </div>
+                    <div id="reportMap" class="report-map" role="application" aria-label="Mapa para selecionar a localização da ocorrência"></div>
+                    <p id="reportMapHint" class="report-map-hint"><i class="bi bi-info-circle"></i> Clique no mapa para marcar o local da ocorrência.</p>
+                    <input type="hidden" id="reportLatitude" name="latitude">
+                    <input type="hidden" id="reportLongitude" name="longitude">
+                    <button class="btn btn-primary report-submit" type="submit"><i class="bi bi-send"></i> Enviar denúncia</button>
+                </form>
+            </section>
+
+            <div class="monitoring-side-column">
+                <section class="monitoring-section events-tracker">
+                    <div class="monitoring-section-heading">
+                        <span class="section-icon amber-icon"><i class="bi bi-calendar-week"></i></span>
+                        <div><small>AGENDA DA CIDADE</small><h2>Eventos ambientais</h2></div>
+                        <a th:href="@{/map}" class="section-icon-link" aria-label="Abrir mapa"><i class="bi bi-arrow-up-right"></i></a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(upcomingEvents)}" class="monitoring-empty">
+                        <i class="bi bi-calendar2-x"></i><p>Nenhum evento futuro cadastrado.</p>
+                    </div>
+                    <article th:each="event : ${upcomingEvents}" class="tracked-event">
+                        <span class="event-date-marker"><strong th:text="${event.startDate != null ? #temporals.format(event.startDate, 'dd') : '--'}">12</strong><small th:text="${event.startDate != null ? #temporals.format(event.startDate, 'MMM') : 'data'}">mai</small></span>
+                        <div><h3 th:text="${event.title}">Evento ambiental</h3><p><i class="bi bi-geo-alt"></i><span th:text="${event.greenArea != null ? event.greenArea.name : 'Local a confirmar'}">Área verde</span></p><span class="event-status" th:text="${event.status != null ? event.status.displayName : 'Agendado'}">Agendado</span></div>
+                    </article>
+                    <a class="tracker-footer-link" th:href="@{/map}">Explorar locais e eventos <i class="bi bi-arrow-right"></i></a>
+                </section>
+
+                <section id="denuncias" class="monitoring-section reports-tracker">
+                    <div class="monitoring-section-heading">
+                        <span class="section-icon blue-icon"><i class="bi bi-clipboard2-check"></i></span>
+                        <div><small>ACOMPANHAMENTO</small><h2>Denúncias recentes</h2></div>
+                    </div>
+                    <form th:action="@{/denuncias/acompanhar}" method="get" class="tracking-lookup-form">
+                        <label for="trackingCodeLookup">Já tem um protocolo?</label>
+                        <div><input id="trackingCodeLookup" name="trackingCode" class="form-control" type="text" placeholder="Cole seu protocolo" required><button class="btn btn-outline-success" type="submit" aria-label="Consultar protocolo" title="Consultar protocolo"><i class="bi bi-search"></i></button></div>
+                    </form>
+                    <div th:if="${#lists.isEmpty(reports)}" class="monitoring-empty">
+                        <i class="bi bi-chat-square-text"></i><p>Seja a primeira pessoa a registrar uma ocorrência.</p>
+                    </div>
+                    <article th:each="report : ${reports}" class="tracked-report" th:attr="data-lat=${report.latitude},data-lng=${report.longitude},data-title=${report.title}">
+                        <div class="tracked-report-top"><span class="report-category-label" th:text="${report.category.label}">Categoria</span><time th:text="${#temporals.format(report.createdAt, 'dd/MM/yyyy')}">12/05/2026</time></div>
+                        <h3 th:text="${report.title}">Título da ocorrência</h3>
+                        <p th:text="${report.description}">Descrição</p>
+                        <div class="tracked-report-bottom">
+                            <span class="report-status" th:classappend="| status-${#strings.toLowerCase(report.status)}|" th:text="${report.status.label}">Recebida</span>
+                            <button type="button" class="report-map-link" data-center-report><i class="bi bi-geo-alt"></i> Ver no mapa</button>
+                        </div>
+                        <form th:if="${session.loggedUser != null and session.loggedUser.hasPermission(T(com.example.EcoRadar.model.enums.Permission).MANAGE_USERS)}" th:action="@{/monitoramento/denuncias/{id}/status(id=${report.id})}" method="post" class="report-status-form">
+                            <label class="visually-hidden" th:for="|report-status-${report.id}|">Atualizar status</label>
+                            <select class="form-select form-select-sm" name="status" th:id="|report-status-${report.id}|"><option th:each="status : ${reportStatuses}" th:value="${status}" th:selected="${status == report.status}" th:text="${status.label}">Status</option></select>
+                            <button class="btn btn-sm btn-outline-success" type="submit" title="Salvar status" aria-label="Salvar status"><i class="bi bi-check-lg"></i></button>
+                        </form>
+                    </article>
+                    <a class="tracker-footer-link" href="#registrar">Registrar outra ocorrência <i class="bi bi-arrow-right"></i></a>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="/js/monitoring-map.js"></script>
+<script src="/js/environmental-heatmap.js"></script>
+</body>
+</html>
